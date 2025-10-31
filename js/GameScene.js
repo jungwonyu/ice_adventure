@@ -602,16 +602,19 @@ export default class GameScene extends Phaser.Scene {
 
   // 플레이어 vs 장애물(player 처리)
   playerHitObstacle(player, obstacle) {
+    if (this.isGameOver) return;
     this.handlePlayerHit(player, obstacle);
   }
 
   // 보스 총알 vs 플레이어(player 처리)
   bossBulletHitPlayer(player, bullet) {
+    if (this.isGameOver) return;
     this.handlePlayerHit(player, bullet);
   }
 
   // 보스 vs 플레이어(player 처리)
   bossHitPlayer(player, boss) {
+    if (this.isGameOver) return;
     this.handlePlayerHit(player, null);
   }
 
