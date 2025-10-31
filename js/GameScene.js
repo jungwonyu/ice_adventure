@@ -39,6 +39,9 @@ export default class GameScene extends Phaser.Scene {
     this.quizData = null; 
     this.overlay = null;
     this.repairSprite = null;
+
+  this.isInvincible = false; // 쉴드 벗겨진 후 무적 상태
+  this.isRevivePopupShown = false; // 충돌 팝업 중복 방지
   }
 
   create(data) {
@@ -58,7 +61,7 @@ export default class GameScene extends Phaser.Scene {
 
     // 플레이어 생성
     this.player = this.physics.add.sprite(360, 1120, 'player').setScale(0.3);
-    this.player.body.setSize(this.player.width * 0.8, this.player.height * 0.8);
+    this.player.body.setSize(this.player.width * 0.9, this.player.height * 0.9);
     this.player.setCollideWorldBounds(true);
     this.playerBullets = this.physics.add.group({defaultKey: 'playerBullet'}); // 플레이어 총알
     this.bossBullets = this.physics.add.group({defaultKey: 'bossBullet'}); // 보스 총알 그룹 생성
@@ -259,6 +262,7 @@ export default class GameScene extends Phaser.Scene {
       // 드래그 중에도 obstacle1(뱀) 좌우 이동
       this.obstacles.children.entries.forEach((obstacle) => {
         if (obstacle.texture.key === 'obstacle1') {
+          // playerbullet에 맞은 obstacle1(뱀)은 좌우로 움직이지 않음
           if (obstacle.isHit) return;
           const newX = obstacle.x + Math.sin(Date.now() / 2000 + obstacle.y / 100) * 8.0;
           const obstacleHalfWidth = obstacle.width * obstacle.scaleX * 0.5;
@@ -280,6 +284,9 @@ export default class GameScene extends Phaser.Scene {
     if (this.obstacleCount >= this.maxObstacles && this.obstacles.children.entries.length == 0 && shouldStopDistance &&!this.isGameOver && !this.isBossShown) {
       this.isBossShown = true;
 
+      this.sound.stopAll();
+      this.soundManager.setBGM('bossBgm');
+
       const warningHeight = this.scale.height * 0.3;
       const warningOverlay = this.add.graphics({ x: 0, y: 0 }).setDepth(100);
       for (let i = 0; i < warningHeight; i += 4) {
@@ -296,7 +303,7 @@ export default class GameScene extends Phaser.Scene {
         repeat: 7
       });
       
-      this.time.delayedCall(2000, () => {
+      this.time.delayedCall(1000, () => {
         warningOverlay.destroy();
         this.showBoss();
       });
@@ -365,6 +372,7 @@ export default class GameScene extends Phaser.Scene {
     this.obstacles.children.entries.forEach((obstacle) => { // 장애물 정리 / 좌우 이동(obstacle1)
       if (obstacle.y > 1330) obstacle.destroy(); // 장애물 정리
       if (obstacle.texture.key === 'obstacle1') { // obstacle1 좌우로 움직이는 기능 추가
+        // playerbullet에 맞은 obstacle1(뱀)은 좌우로 움직이지 않음
         if (obstacle.isHit) return;
         const newX = obstacle.x + Math.sin(Date.now() / 2000 + obstacle.y / 100) * 8.0;
         const obstacleHalfWidth = obstacle.width * obstacle.scaleX * 0.5;
@@ -552,7 +560,7 @@ export default class GameScene extends Phaser.Scene {
         obstacle.originalType = obstacleKey;
         obstacle.setScale(config.scale);
         obstacle.play('obstacle1Ani');
-        obstacle.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
+        obstacle.setSize(obstacle.width * 0.9, obstacle.height * 0.9);
         obstacle.setVelocityY(this.obstacleSpeed);
       }
       this.obstacleCount++; // 뱀 그룹 전체를 하나의 장애물로 카운트
@@ -562,7 +570,7 @@ export default class GameScene extends Phaser.Scene {
       this.obstacleCount++;
       obstacle.originalType = obstacleKey;
       obstacle.setScale(config.scale);
-      obstacle.setSize(obstacle.width * 0.8, obstacle.height * 0.8);
+      obstacle.setSize(obstacle.width * 0.9, obstacle.height * 0.9);
       obstacle.setVelocityY(this.obstacleSpeed);
     }
   }
@@ -585,7 +593,7 @@ export default class GameScene extends Phaser.Scene {
   // ------------------------------------------------------------------------------------ 충돌 처리 메서드들
   // 공통 플레이어 피격 처리 함수
   handlePlayerHit(player, otherObject) {
-    if (this.isGameOver) return;
+  if (this.isGameOver || this.isInvincible) return;
 
     // 쉴드가 있으면 쉴드 제거하고 충돌한 객체만 파괴
     if (player.shieldOverlay) {
@@ -755,9 +763,14 @@ export default class GameScene extends Phaser.Scene {
     this.soundManager.playSound('helperSound');
     shield.destroy();
 
-    if (player.shieldOverlay) { // 기존 실드가 있으면 제거
+    if (player.shieldOverlay) {
       player.shieldOverlay.destroy();
       player.shieldOverlay = null;
+      // 쉴드가 벗겨진 직후 일정 시간 무적
+      this.isInvincible = true;
+      this.time.delayedCall(1000, () => {
+        this.isInvincible = false;
+      });
     }
 
     const shieldOverlay = this.add.graphics();
@@ -782,7 +795,7 @@ export default class GameScene extends Phaser.Scene {
     this.bulletTimer = this.time.addEvent({
       delay: 500,
       callback: () => {
-        if (this.isGameOver) return;
+      if (this.isGameOver || this.isInvincible) return;
         
         // 왼쪽 총알 추가
         const leftBullet = this.playerBullets.get(this.player.x - 25, this.player.y - 50);
@@ -811,7 +824,7 @@ export default class GameScene extends Phaser.Scene {
       this.bulletTimer = this.time.addEvent({ // 원래 단일 총알 타이머 복구
         delay: 500,
         callback: () => {
-          if (this.isGameOver) return;
+        if (this.isGameOver || this.isInvincible) return;
           const bullet = this.playerBullets.get(this.player.x, this.player.y - 50);
           if (bullet) {
             bullet.setScale(0.1);
@@ -1106,7 +1119,7 @@ export default class GameScene extends Phaser.Scene {
             walkie.body.setSize(walkie.width * 0.8, walkie.height * 0.8);
           }
           
-          this.time.delayedCall(5000, () =>  this.nextLevel());
+          this.time.delayedCall(6000, () =>  this.nextLevel());
         }
       });
     })
@@ -1117,9 +1130,6 @@ export default class GameScene extends Phaser.Scene {
   }
 
   showBoss() { // 보스 등장
-    this.sound.stopAll();
-    this.soundManager.setBGM('bossBgm');
-
     this.boss = this.physics.add.sprite(this.scale.width / 2, -100, 'boss1');
     this.boss.type = 'boss1';
     this.boss.body.setSize(this.boss.width * 0.8, this.boss.height * 0.8);
@@ -1158,6 +1168,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   showRevivePopup(isIncorrectAnswer = false) {
+    if (this.isRevivePopupShown) return;
+    this.isRevivePopupShown = true;
     if (this.isGameOver) this.soundManager.stopAll();
     this.soundManager.playSound('hitPlayerSound');
     const { width, height } = this.scale;
@@ -1222,6 +1234,7 @@ export default class GameScene extends Phaser.Scene {
         endGameButton.destroy();
         this.game.canvas.style.cursor = 'default';
         this.showQuizPopup(); // 퀴즈 팝업 열기
+        this.isRevivePopupShown = false;
       });
     } else {
       this.soundManager.playSound('gameOverSound');
@@ -1240,6 +1253,7 @@ export default class GameScene extends Phaser.Scene {
     endGameButton.on('pointerdown', () => {
       this.removeOverlay();
       this.handleQuit();
+      this.isRevivePopupShown = false;
     });
     this.game.canvas.style.cursor = 'default';
   }
@@ -1386,6 +1400,9 @@ export default class GameScene extends Phaser.Scene {
     if (this.isGameOver || this.isPaused) return;
     this.sound.stopAll();
     this.level++;
+
+    this.backgroundSpeed = 426 * (1 + (this.level - 1) * 0.12); // 12%씩 증가
+    this.obstacleSpeed = 426 * (1 + (this.level - 1) * 0.12);
     
     if (this.level > 10) {
       this.showGameComplete();
@@ -1413,7 +1430,13 @@ export default class GameScene extends Phaser.Scene {
     
     // 플레이어 상태 초기화
     this.player.setTexture('player');
-    this.player.setPosition(360, 1120);
+    this.tweens.add({
+      targets: this.player,
+      x: 360,
+      y: 1120,
+      duration: 1000,
+      ease: 'Power2'
+    });
     this.player.setVelocity(0, 0);
     if (this.player.shieldOverlay) {
       this.player.shieldOverlay.destroy();
@@ -1441,7 +1464,7 @@ export default class GameScene extends Phaser.Scene {
     this.bulletTimer = this.time.addEvent({
       delay: 500,
       callback: () => {
-        if (this.isGameOver) return;
+      if (this.isGameOver || this.isInvincible) return;
         const bullet = this.playerBullets.get(this.player.x, this.player.y - 50);
         if (bullet) {
           bullet.setScale(0.1);

@@ -46,16 +46,16 @@ export const colorConfig = {
 };
 
 export const levelConfig = {
-  1: { bossDistance: 3000, bossBullet: 3, bossHit: 20, obstacleCount: 1, walkieReward: 1 },
-  2: { bossDistance: 6000, bossBullet: 3, bossHit: 25, obstacleCount: 1, walkieReward: 3 },
-  3: { bossDistance: 9000, bossBullet: 3, bossHit: 30, obstacleCount: 1, walkieReward: 5 },
-  4: { bossDistance: 12000, bossBullet: 5, bossHit: 35, obstacleCount: 2, walkieReward: 7 },
-  5: { bossDistance: 15000, bossBullet: 5, bossHit: 40, obstacleCount: 2, walkieReward: 9 },
-  6: { bossDistance: 18000, bossBullet: 5, bossHit: 45, obstacleCount: 2, walkieReward: 11 },
-  7: { bossDistance: 21000, bossBullet: 7, bossHit: 50, obstacleCount: 3, walkieReward: 13 },
-  8: { bossDistance: 24000, bossBullet: 7, bossHit: 55, obstacleCount: 3, walkieReward: 15 },
-  9: { bossDistance: 27000, bossBullet: 7, bossHit: 60, obstacleCount: 3, walkieReward: 17 },
-  10: { bossDistance: 30000, bossBullet: 7, bossHit: 65, obstacleCount: 3, walkieReward: 19 }
+  1: { bossDistance: 3000, bossBullet: 3, bossHit: 30, obstacleCount: 1, walkieReward: 1 },
+  2: { bossDistance: 6000, bossBullet: 3, bossHit: 35, obstacleCount: 1, walkieReward: 3 },
+  3: { bossDistance: 9000, bossBullet: 3, bossHit: 40, obstacleCount: 1, walkieReward: 5 },
+  4: { bossDistance: 12000, bossBullet: 5, bossHit: 45, obstacleCount: 2, walkieReward: 7 },
+  5: { bossDistance: 15000, bossBullet: 5, bossHit: 50, obstacleCount: 2, walkieReward: 9 },
+  6: { bossDistance: 18000, bossBullet: 5, bossHit: 55, obstacleCount: 2, walkieReward: 11 },
+  7: { bossDistance: 21000, bossBullet: 7, bossHit: 60, obstacleCount: 3, walkieReward: 13 },
+  8: { bossDistance: 24000, bossBullet: 7, bossHit: 65, obstacleCount: 3, walkieReward: 15 },
+  9: { bossDistance: 27000, bossBullet: 7, bossHit: 70, obstacleCount: 3, walkieReward: 17 },
+  10: { bossDistance: 30000, bossBullet: 7, bossHit: 75, obstacleCount: 3, walkieReward: 19 }
 };
 
 const game = new Phaser.Game(Object.assign(config, colorConfig, levelConfig));
