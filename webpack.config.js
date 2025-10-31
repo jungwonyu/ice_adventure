@@ -1,5 +1,5 @@
 const path = require('path');
-const distPath = path.resolve(__dirname, '../iceAdventure/js', 'Obfuscation');
+const distPath = path.resolve(__dirname, '../ice_adventure/js', 'obfuscation');
 
 module.exports = (env) => ({
   mode: env && env.production ? 'production' : 'development',

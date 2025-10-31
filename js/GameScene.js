@@ -75,7 +75,6 @@ export default class GameScene extends Phaser.Scene {
       loop: true
     });
 
-    
     this.obstacles = this.physics.add.group(); // 장애물 그룹 생성
     this.coins = this.physics.add.group(); // 코인 그룹 생성
     this.shields = this.physics.add.group();  // shield 그룹 생성
@@ -170,6 +169,41 @@ export default class GameScene extends Phaser.Scene {
     this.startObstacleTimer();
     this.isGameOver = false;
     this.createLevelProgressBar();
+
+      // 드래그 이동 관련 변수 초기화
+      this.isDragging = false;
+      this.dragOffsetX = 0;
+
+      // 모바일/PC 드래그 이벤트 등록
+      this.input.on('pointerdown', (pointer) => {
+        // 플레이어와 터치/마우스 위치가 가까울 때만 드래그 시작
+        if (Phaser.Math.Distance.Between(pointer.x, pointer.y, this.player.x, this.player.y) < 150) {
+          this.isDragging = true;
+          this.dragOffsetX = this.player.x - pointer.x;
+        }
+      });
+      this.input.on('pointerup', () => {
+        this.isDragging = false;
+      });
+      this.input.on('pointermove', (pointer) => {
+        if (this.isDragging) {
+          if (this.isBossShown) {
+            // 보스 등장 후: x, y 모두 이동
+            let newX = pointer.x + this.dragOffsetX;
+            let newY = pointer.y;
+            // 화면 경계 체크
+            newX = Math.max(150, Math.min(newX, this.scale.width - 150));
+            newY = Math.max(150, Math.min(newY, this.scale.height - 150));
+            this.player.x = newX;
+            this.player.y = newY;
+          } else {
+            // 보스 등장 전: x만 이동
+            let newX = pointer.x + this.dragOffsetX;
+            newX = Math.max(150, Math.min(newX, this.scale.width - 150));
+            this.player.x = newX;
+          }
+        }
+      });
   }
 
   async update(time, delta) {
@@ -177,11 +211,55 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
 
-    const deltaSeconds = delta / 1000;
+    // deltaSeconds 변수는 한 번만 선언
+    let deltaSeconds = delta / 1000;
 
+    // 드래그 중에도 배경 흐름 유지
     if (!this.isPaused && !this.isGameOver && !this.isBossShown) {
       this.background.tilePositionY -= this.backgroundSpeed * deltaSeconds;
     }
+
+    // 드래그 중일 때는 키보드 이동 무시, 플레이어 위치만 갱신
+    if (this.isDragging) {
+      this.player.setVelocityX(0);
+      // 쉴드 오버레이도 같이 이동
+      if (this.player && this.player.shieldOverlay) {
+        this.player.shieldOverlay.x = this.player.x;
+        this.player.shieldOverlay.y = this.player.y;
+      }
+      // 더블 타이머 UI도 같이 이동 및 진행 바 갱신
+      if (this.doubleTimerBar && this.player) {
+        const playerX = this.player.x;
+        const playerY = this.player.y - 80;
+        if (this.doubleTimerBg) {
+          this.doubleTimerBg.x = playerX;
+          this.doubleTimerBg.y = playerY;
+        }
+        if (this.doubleTimerBarBg) {
+          this.doubleTimerBarBg.x = playerX;
+          this.doubleTimerBarBg.y = playerY;
+        }
+        this.doubleTimerBar.x = playerX;
+        this.doubleTimerBar.y = playerY;
+        // 진행 바도 갱신
+        this.updateDoubleTimerUI();
+      }
+      // 드래그 중에도 거리 증가 및 UI 갱신
+      const targetBossDistance = levelConfig[this.level].bossDistance / 100;
+      const shouldStopDistance = this.distance >= targetBossDistance;
+      if (!this.isBossShown && !shouldStopDistance) {
+        const deltaSeconds = delta / 1000;
+        this.distance += deltaSeconds;
+        this.distanceText.setText(`${Math.floor(this.distance)}m`);
+      }
+      // 드래그 중에도 보스 체력바 UI 갱신
+      if (this.boss && this.boss.active) {
+        this.updateBossHealthUI();
+      }
+      return;
+    }
+
+    // (중복) deltaSeconds 선언 및 배경 흐름 코드 제거
 
     // 보스 거리 도달 체크 및 거리 증가 중단
     const targetBossDistance = levelConfig[this.level].bossDistance / 100;
@@ -217,10 +295,8 @@ export default class GameScene extends Phaser.Scene {
 
     if (this.boss && this.boss.active) {
       const bossTargetY = 250;
-      const centerX = this.scale.width / 2;
-      this.boss.x = centerX + Math.sin(Date.now() / 1200) * 120;
-      if (this.boss.y < bossTargetY) {
-        this.boss.setVelocityY(this.obstacleSpeed);
+      if (this.boss.y < bossTargetY - 5) {
+        // tween이 알아서 처리하므로 아무것도 하지 않음
       } else {
         this.boss.y = bossTargetY;
         this.boss.setVelocityY(0);
