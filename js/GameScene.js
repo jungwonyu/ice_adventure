@@ -256,6 +256,17 @@ export default class GameScene extends Phaser.Scene {
       if (this.boss && this.boss.active) {
         this.updateBossHealthUI();
       }
+      // 드래그 중에도 obstacle1(뱀) 좌우 이동
+      this.obstacles.children.entries.forEach((obstacle) => {
+        if (obstacle.texture.key === 'obstacle1') {
+          if (obstacle.isHit) return;
+          const newX = obstacle.x + Math.sin(Date.now() / 2000 + obstacle.y / 100) * 8.0;
+          const obstacleHalfWidth = obstacle.width * obstacle.scaleX * 0.5;
+          if (newX >= 150 + obstacleHalfWidth && newX <= this.scale.width - 150 - obstacleHalfWidth) {
+            obstacle.setX(newX);
+          }
+        }
+      });
       return;
     }
 
