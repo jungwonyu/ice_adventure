@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ice Adventure</title>
+  <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
+  <link rel="preload" href="https://fastly.jsdelivr.net/gh/projectnoonnu/2506-1@1.0/PFStardustS.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
+</head>
+
+<body>
+  <div id="game-container"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/webfont/1.6.28/webfontloader.js"></script>
+  <script type="module">
+    WebFont.load({
+      custom: {
+        families: ['Cafe24Surround', 'PFStardustS', 'BagelFat'],
+        urls: ['css/style.css']
+      },
+      active: function() {
+        import('./js/obfuscation/Main.js');
+      }
+    });
+  </script>
+</body>
+</html>
