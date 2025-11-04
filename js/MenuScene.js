@@ -76,7 +76,6 @@ export default class MenuScene extends Phaser.Scene {
     this.load.image('leftArrow', 'assets/images/leftArrow.png');
     this.load.image('rightArrow', 'assets/images/rightArrow.png');
     this.load.image('closeButton', 'assets/images/closeButton.png');
-    this.load.spritesheet('loading', 'assets/images/loading.png', { frameWidth: 100, frameHeight: 100 });
   }
 
   loadAnimations() {
@@ -125,7 +124,12 @@ export default class MenuScene extends Phaser.Scene {
   // ========================================================================================
   setStartScene() {
     const { width, height } = this.scale;
-    this.add.image(width / 2, height / 2, 'startBackground').setOrigin(0.5).setDisplaySize(width, height);
+
+    const introVideo = this.add.video(width / 2, height / 2, 'introVideo');
+    introVideo.setOrigin(0.5);
+    introVideo.setLoop(true);
+    introVideo.setScale(0.7);
+    introVideo.play();
 
     const title = this.add.image(width / 2, height / 2 - 400, 'gameTitle').setOrigin(0.5).setScale(0);
     this.tweens.add({ targets: title, scaleX: 0.7, scaleY: 0.7, duration: 1000, ease: 'Back.out' });

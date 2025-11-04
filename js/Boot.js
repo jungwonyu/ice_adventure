@@ -6,6 +6,7 @@ export default class Boot extends Phaser.Scene {
   preload() {
     this.load.image('logo', 'assets/images/icecandy_logo.png');
     this.load.spritesheet('loading', 'assets/images/loading_adventure.png', { frameWidth: 97, frameHeight: 50 });
+    this.load.video('introVideo', 'assets/videos/intro.mp4', 'loadeddata', false, true);
   }
   
   create() {
