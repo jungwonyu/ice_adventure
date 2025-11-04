@@ -1630,6 +1630,7 @@ export default class GameScene extends Phaser.Scene {
   handleQuit() { // 게임 끝내기
     this.soundManager.playSound('buttonSound');
 
+    // 모든 타이머 정리
     if (this.obstacleTimer) {
       this.obstacleTimer.destroy();
       this.obstacleTimer = null;
@@ -1646,7 +1647,95 @@ export default class GameScene extends Phaser.Scene {
       this.bossBulletTimer.destroy();
       this.bossBulletTimer = null;
     }
+
+    // 모든 게임 오브젝트 그룹 정리
+    if (this.obstacles) {
+      this.obstacles.clear(true, true);
+      this.obstacles = null;
+    }
+    if (this.coins) {
+      this.coins.clear(true, true);
+      this.coins = null;
+    }
+    if (this.shields) {
+      this.shields.clear(true, true);
+      this.shields = null;
+    }
+    if (this.doubles) {
+      this.doubles.clear(true, true);
+      this.doubles = null;
+    }
+    if (this.walkies) {
+      this.walkies.clear(true, true);
+      this.walkies = null;
+    }
+    if (this.playerBullets) {
+      this.playerBullets.clear(true, true);
+      this.playerBullets = null;
+    }
+    if (this.bossBullets) {
+      this.bossBullets.clear(true, true);
+      this.bossBullets = null;
+    }
+
+    // 보스 정리
+    if (this.boss) {
+      this.boss.destroy();
+      this.boss = null;
+    }
+
+    // 플레이어 쉴드 오버레이 정리
+    if (this.player && this.player.shieldOverlay) {
+      this.player.shieldOverlay.destroy();
+      this.player.shieldOverlay = null;
+    }
+
+    // UI 요소들 정리
+    this.removeDoubleTimerUI();
+    this.removeBossHealthUI();
+    this.removeOverlay();
+    this.hidePauseMenu();
+
+    // 레벨 진행 바 정리
+    if (this.levelBarBg) {
+      this.levelBarBg.destroy();
+      this.levelBarBg = null;
+    }
+    if (this.levelBar) {
+      this.levelBar.destroy();
+      this.levelBar = null;
+    }
+    if (this.levelBarText) {
+      this.levelBarText.destroy();
+      this.levelBarText = null;
+    }
+
+    // 버튼들 정리
+    if (this.playButton) {
+      this.playButton.destroy();
+      this.playButton = null;
+    }
+    if (this.pauseButton) {
+      this.pauseButton.destroy();
+      this.pauseButton = null;
+    }
+
+    // 수리 스프라이트 정리
+    if (this.repairSprite) {
+      this.repairSprite.destroy();
+      this.repairSprite = null;
+    }
+
+    // 모든 트윈 정지
+    this.tweens.killAll();
     
+    // 모든 사운드 정지
+    this.sound.stopAll();
+    
+    // 물리 엔진 정지
+    this.physics.pause();
+    
+    // 씬 전환
     this.scene.stop('GameScene'); 
     this.scene.start('MenuScene');
     this.game.canvas.style.cursor = 'default';
@@ -1655,10 +1744,33 @@ export default class GameScene extends Phaser.Scene {
     this.isPaused = false;
     this.isGameOver = false;
     this.isBossShown = false;
+    this.isRevivePopupShown = false;
+    this.isInvincible = false;
+    this.isDragging = false;
     this.obstacleCount = 0;
     this.currentObstacleType = 0;
     this.distance = 0;
     this.score = 0;
     this.level = 1;
+    this.playerShake = 0;
+    this.dragOffsetX = 0;
+    this.backgroundSpeed = 426;
+    this.obstacleSpeed = 426;
+    this.maxObstacles = 30;
+    
+    // 텍스트 객체들 초기화
+    this.scoreText = null;
+    this.distanceText = null;
+    this.walkieText = null;
+    this.repairText = null;
+    this.gameOverText = null;
+    
+    // 기타 객체들 초기화
+    this.player = null;
+    this.background = null;
+    this.cursors = null;
+    this.overlay = null;
+    this.quizData = null;
+    this.soundManager = null;
   }
 }
