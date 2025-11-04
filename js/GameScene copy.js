@@ -489,7 +489,7 @@ export default class GameScene extends Phaser.Scene {
     if (this.bossBulletTimer) this.bossBulletTimer.paused = true;
     
     // 일시정지 UI 표시
-    // this.showPauseMenu();
+    this.showPauseMenu();
   }
 
   gameResume() {

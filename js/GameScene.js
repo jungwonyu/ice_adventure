@@ -407,7 +407,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateLevelProgressBar();
 
     // 텍스트
-    this.levelBarText = this.add.text(width / 2, barY + barHeight / 2, `Level ${this.level} / 10`, {
+    this.levelBarText = this.add.text(width / 2, barY + barHeight / 2, `Level ${this.level}`, {
       fontSize: '20px',
       fill: '#333',
       fontFamily: 'Cafe24Surround',
@@ -428,7 +428,7 @@ export default class GameScene extends Phaser.Scene {
     this.levelBar.fillRoundedRect(barX, barY, barWidth * progress, barHeight, 12);
 
     if (this.levelBarText) {
-      this.levelBarText.setText(`Level ${this.level} / 10`);
+      this.levelBarText.setText(`Level ${this.level}`);
     }
   }
 
