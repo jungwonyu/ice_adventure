@@ -7,6 +7,8 @@ const config = {
   width: 720,
   height: 1280,
   parent: 'game-container',
+  // transparent: true, // 캔버스 배경을 투명하게 설정
+  backgroundColor: 0xc9effa,
   physics: {
     default: 'arcade',
     arcade: {
@@ -33,6 +35,8 @@ export const colorConfig = {
   color_greenTea: '#748F1B',
   color_snow: '#FFFFFF',
   color_black: '#000000',
+  color_loadingBg: '#c9effa',
+  color_loadingBar: '#94ccdc',
 
   hex_chocolate: 0x6F412B,
   hex_lollipop: 0xFF6F91,
@@ -43,6 +47,8 @@ export const colorConfig = {
   hex_greenTea: 0x748F1B,
   hex_snow: 0xFFFFFF,
   hex_black: 0x000000,
+  hex_loadingBg: 0xc9effa,
+  hex_loadingBar: 0x94ccdc,
 };
 
 export const levelConfig = {

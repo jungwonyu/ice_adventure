@@ -12,7 +12,7 @@ export default class SoundManager {
   }
   constructor(scene) {
     this.scene = scene;
-    this.isMuted = false;
+    this.isBGMMuted = false; // BGM 뮤트 상태만 관리
     this.muteButton = null;
     this.soundButton = null;
     this.bgm = null;
@@ -21,31 +21,29 @@ export default class SoundManager {
   createSoundButtons() {
     const { width, height } = this.scene.scale;
 
-    // 음소거 버튼
-    this.muteButton = this.scene.add.image(width - 70, height - 60, 'muteButton').setVisible(!this.isMuted).setScale(0.2).setDepth(1000).setInteractive();
+    // 음소거 버튼 (BGM 활성화 상태)
+    this.muteButton = this.scene.add.image(width - 70, height - 60, 'soundButton').setVisible(!this.isBGMMuted).setScale(0.2).setDepth(1000).setInteractive();
     addHoverEffect(this.muteButton, this.scene);
-    this.muteButton.on('pointerdown', () => this.toggleMute());
+    this.muteButton.on('pointerdown', () => this.toggleBGMMute());
 
-    // 사운드 버튼
-    this.soundButton = this.scene.add.image(width - 70, height - 60, 'soundButton').setVisible(this.isMuted).setScale(0.2).setDepth(1000).setInteractive();
+    // 사운드 버튼 (BGM 뮤트 상태)
+    this.soundButton = this.scene.add.image(width - 70, height - 60, 'muteButton').setVisible(this.isBGMMuted).setScale(0.2).setDepth(1000).setInteractive();
     addHoverEffect(this.soundButton, this.scene);
-    this.soundButton.on('pointerdown', () => this.toggleMute());
+    this.soundButton.on('pointerdown', () => this.toggleBGMMute());
 
     return { muteButton: this.muteButton, soundButton: this.soundButton };
   }
 
-  toggleMute() {
-    this.isMuted = !this.isMuted;
-    this.muteButton.setVisible(!this.isMuted);
-    this.soundButton.setVisible(this.isMuted);
+  toggleBGMMute() {
+    this.isBGMMuted = !this.isBGMMuted;
+    this.muteButton.setVisible(!this.isBGMMuted);
+    this.soundButton.setVisible(this.isBGMMuted);
 
-    if (this.isMuted) { // 음소거
-      this.scene.sound.setMute(true);
+    if (this.isBGMMuted) { // BGM 뮤트
       if (this.bgm && this.bgm.isPlaying) {
         this.bgm.pause();
       }
-    } else { // 음소거 해제
-      this.scene.sound.setMute(false);
+    } else { // BGM 뮤트 해제
       if (this.bgm && this.bgm.isPaused) {
         this.bgm.resume();
       } else if (this.bgm && !this.bgm.isPlaying) {
@@ -53,15 +51,14 @@ export default class SoundManager {
       }
     }
 
-    if (!this.isMuted && this.scene.buttonSound) {
-      this.scene.buttonSound.play();
-    }
+    // 버튼 클릭 효과음은 항상 재생 (BGM 뮤트와 무관)
+    this.playSound('buttonSound');
   }
 
   setBGM(bgmKey) {
     if (this.bgm) {
       if (this.bgm.key === bgmKey) {
-        if (!this.bgm.isPlaying && !this.isMuted) {
+        if (!this.bgm.isPlaying && !this.isBGMMuted) {
           this.bgm.play();
         }
         return;
@@ -70,13 +67,13 @@ export default class SoundManager {
       }
     }
     this.bgm = this.scene.sound.add(bgmKey, { loop: true, volume: 0.5 });
-    if (!this.isMuted) {
+    if (!this.isBGMMuted) {
       this.bgm.play();
     }
   }
 
   playBGM() {
-    if (this.bgm && !this.isMuted) this.bgm.play();
+    if (this.bgm && !this.isBGMMuted) this.bgm.play();
   }
 
   stopBGM() {
@@ -88,8 +85,15 @@ export default class SoundManager {
   }
 
   playSound(soundKey, options = {}) {
-    if (this.isMuted) return null;
-    const defaultOptions = { volume:1.0, loop: false, ...options };
+    // BGM 파일인지 확인 (파일명에 'bgm'이 포함되어 있는지 체크)
+    const isBGMSound = soundKey.toLowerCase().includes('bgm');
+    
+    // BGM 소리인 경우 BGM 뮤트 상태 확인, 일반 효과음은 항상 재생
+    if (isBGMSound && this.isBGMMuted) {
+      return null;
+    }
+    
+    const defaultOptions = { volume: 1.0, loop: false, ...options };
     const sound = this.scene.sound.add(soundKey, defaultOptions);
 
     sound.stop();

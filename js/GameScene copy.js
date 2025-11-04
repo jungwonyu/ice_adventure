@@ -407,7 +407,7 @@ export default class GameScene extends Phaser.Scene {
     this.updateLevelProgressBar();
 
     // 텍스트
-    this.levelBarText = this.add.text(width / 2, barY + barHeight / 2, `Level ${this.level} / 10`, {
+    this.levelBarText = this.add.text(width / 2, barY + barHeight / 2, `Level ${this.level}`, {
       fontSize: '20px',
       fill: '#333',
       fontFamily: 'Cafe24Surround',
@@ -427,9 +427,7 @@ export default class GameScene extends Phaser.Scene {
     this.levelBar.fillStyle(colorConfig.hex_mint, 1);
     this.levelBar.fillRoundedRect(barX, barY, barWidth * progress, barHeight, 12);
 
-    if (this.levelBarText) {
-      this.levelBarText.setText(`Level ${this.level} / 10`);
-    }
+    if (this.levelBarText) this.levelBarText.setText(`Level ${this.level} / 10`);
   }
 
   createButtons() {
@@ -489,6 +487,9 @@ export default class GameScene extends Phaser.Scene {
     if (this.obstacleTimer) this.obstacleTimer.paused = true;
     if (this.doubleTimer) this.doubleTimer.paused = true;
     if (this.bossBulletTimer) this.bossBulletTimer.paused = true;
+    
+    // 일시정지 UI 표시
+    // this.showPauseMenu();
   }
 
   gameResume() {
@@ -524,6 +525,9 @@ export default class GameScene extends Phaser.Scene {
     if (this.obstacleTimer) this.obstacleTimer.paused = false;
     if (this.doubleTimer) this.doubleTimer.paused = false;
     if (this.bossBulletTimer) this.bossBulletTimer.paused = false;
+    
+    // 일시정지 UI 제거
+    this.hidePauseMenu();
   }
 
   createObstacle() {
@@ -1561,6 +1565,75 @@ export default class GameScene extends Phaser.Scene {
     menuButton.on('pointerdown', () => this.handleQuit()); // 버튼 클릭 시 메인 메뉴로 이동
   }
 
+  // ------------------------------------------------------------------------------- 일시정지 메뉴
+  showPauseMenu() {
+    const { width, height } = this.scale;
+    
+    // 딤 처리 배경
+    this.pauseOverlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7)
+      .setDepth(100)
+      .setInteractive();
+    
+    // 다시 시작 버튼
+    this.resumeButton = this.add.image(width / 2 - 140, height / 2 + 20, 'replayButton')
+      .setScale(0.3)
+      .setDepth(101)
+      .setInteractive();
+    addHoverEffect(this.resumeButton, this);
+    this.resumeButton.on('pointerdown', () => {
+      this.soundManager.playSound('buttonSound');
+      this.playButton.setVisible(false);
+      this.pauseButton.setVisible(true);
+      this.gameResume();
+    });
+    
+    // 끝내기 버튼
+    this.quitButton = this.add.image(width / 2 + 140, height / 2 + 20, 'goHomeButton')
+      .setScale(0.3)
+      .setDepth(101)
+      .setInteractive();
+    addHoverEffect(this.quitButton, this);
+    this.quitButton.on('pointerdown', () => {
+      this.soundManager.playSound('buttonSound');
+      this.hidePauseMenu();
+      this.handleQuit();
+    });
+    
+    // 버튼들 등장 애니메이션
+    this.resumeButton.setAlpha(0).setScale(0);
+    this.quitButton.setAlpha(0).setScale(0);
+    
+    this.tweens.add({
+      targets: [this.resumeButton, this.quitButton],
+      alpha: 1,
+      scaleX: 0.3,
+      scaleY: 0.3,
+      duration: 400,
+      ease: 'Back.out',
+      delay: 200
+    });
+  }
+  
+  hidePauseMenu() {
+    if (this.pauseOverlay) {
+      this.pauseOverlay.destroy();
+      this.pauseOverlay = null;
+    }
+    if (this.pauseText) {
+      this.pauseText.destroy();
+      this.pauseText = null;
+    }
+    if (this.resumeButton) {
+      this.resumeButton.destroy();
+      this.resumeButton = null;
+    }
+    if (this.quitButton) {
+      this.quitButton.destroy();
+      this.quitButton = null;
+    }
+    this.game.canvas.style.cursor = 'default';
+  }
+  
   // ------------------------------------------------------------------------------- 기본
   handleQuit() { // 게임 끝내기
     this.soundManager.playSound('buttonSound');

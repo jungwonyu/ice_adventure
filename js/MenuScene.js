@@ -11,8 +11,8 @@ export default class MenuScene extends Phaser.Scene {
 
   preload() {
     this.createLoadingBar(); // 로딩 바 생성
-    this.loadAnimations(); // 애니메이션 설정
     this.loadImages(); // 이미지 로드
+    this.loadAnimations(); // 애니메이션 설정
     this.loadSounds(); // 사운드 로드
     this.load.json('quizData', 'data/quizData.json'); // 퀴즈 데이터
   }
@@ -45,6 +45,7 @@ export default class MenuScene extends Phaser.Scene {
     this.load.image('revivePopup', 'assets/images/revivePopup.png');
     this.load.image('reviveButton', 'assets/images/reviveButton.png');
     this.load.image('endGameButton', 'assets/images/endGameButton.png');
+    this.load.image('replayButton', 'assets/images/replayButton.png');
     this.load.image('quizContainer', 'assets/images/quizContainer.png');
     this.load.image('quizItemBox', 'assets/images/quizItemBox.png');
     this.load.image('nextContainer', 'assets/images/nextContainer.png');
@@ -75,6 +76,7 @@ export default class MenuScene extends Phaser.Scene {
     this.load.image('leftArrow', 'assets/images/leftArrow.png');
     this.load.image('rightArrow', 'assets/images/rightArrow.png');
     this.load.image('closeButton', 'assets/images/closeButton.png');
+    this.load.spritesheet('loading', 'assets/images/loading.png', { frameWidth: 100, frameHeight: 100 });
   }
 
   loadAnimations() {
@@ -87,7 +89,7 @@ export default class MenuScene extends Phaser.Scene {
         { key: 'distanceAni', spriteKey: 'distance', frames: { start: 3, end: 0 }, frameRate: 3 },
         { key: 'playerDanceAni', spriteKey: 'playerDance', frames: { start: 0, end: 4 }, frameRate: 5 },
         { key: 'playerSadAni', spriteKey: 'playerSad', frames: { start: 0, end: 4 }, frameRate: 5 },
-        { key: 'playerRepairAni', spriteKey: 'playerRepair', frames: { start: 0, end: 4 }, frameRate: 5 }
+        { key: 'playerRepairAni', spriteKey: 'playerRepair', frames: { start: 0, end: 4 }, frameRate: 5 },
       ];
 
       animations.forEach(anim => {
@@ -147,7 +149,7 @@ export default class MenuScene extends Phaser.Scene {
   setSoundManager() {
     this.soundManager = SoundManager.getInstance(this);
     this.soundManager.createSoundButtons();
-    this.soundManager.setBGM('bgm');
+    // this.soundManager.setBGM('bgm');
   }
 
   // ========================================================================================
@@ -156,60 +158,86 @@ export default class MenuScene extends Phaser.Scene {
 
   createLoadingBar() {
     const { width, height } = this.scale;
-    
     this.cameras.main.setBackgroundColor(0xc9effa);
 
     // 로딩바 구성 요소들
     const loadingBarConfig = {
-      background: { x: width / 2 - 250, y: height / 2 - 40, width: 500, height: 80, radius: 25 },
-      progressBg: { x: width / 2 - 240, y: height / 2 - 30, width: 480, height: 60, radius: 20 },
-      progress: { x: width / 2 - 240, y: height / 2 - 30, height: 60, radius: 20 }
+      x: width / 2 - 250,
+      y: height / 2 - 15,
+      width: 500,
+      height: 30,
+      radius: 15
     };
+
+    // 파란색 테두리 (외부)
+    const blueOutline = this.add.graphics();
+    blueOutline.lineStyle(3, colorConfig.hex_loadingBar, 1);
+    blueOutline.strokeRoundedRect(
+      loadingBarConfig.x - 3, 
+      loadingBarConfig.y - 3, 
+      loadingBarConfig.width + 6, 
+      loadingBarConfig.height + 6, 
+      loadingBarConfig.radius + 3
+    );
+    blueOutline.setDepth(10);
+
+    // 흰색 테두리 (내부)
+    const whiteOutline = this.add.graphics();
+    whiteOutline.lineStyle(2, colorConfig.hex_snow, 1);
+    whiteOutline.strokeRoundedRect(
+      loadingBarConfig.x - 1, 
+      loadingBarConfig.y - 1, 
+      loadingBarConfig.width + 2, 
+      loadingBarConfig.height + 2, 
+      loadingBarConfig.radius + 1
+    );
+    whiteOutline.setDepth(11);
 
     // 로딩바 배경
     const loadingBarBg = this.add.graphics();
-    loadingBarBg.fillStyle(0x000000, 0.7);
+    loadingBarBg.fillStyle(colorConfig.hex_snow, 1);
     loadingBarBg.fillRoundedRect(
-      loadingBarConfig.background.x, 
-      loadingBarConfig.background.y, 
-      loadingBarConfig.background.width, 
-      loadingBarConfig.background.height, 
-      loadingBarConfig.background.radius
+      loadingBarConfig.x, 
+      loadingBarConfig.y, 
+      loadingBarConfig.width, 
+      loadingBarConfig.height, 
+      loadingBarConfig.radius
     );
-    loadingBarBg.setDepth(10);
-
-    // 로딩바 진행 배경
-    const loadingBarProgressBg = this.add.graphics();
-    loadingBarProgressBg.fillStyle(0x333333, 0.8);
-    loadingBarProgressBg.fillRoundedRect(
-      loadingBarConfig.progressBg.x, 
-      loadingBarConfig.progressBg.y, 
-      loadingBarConfig.progressBg.width, 
-      loadingBarConfig.progressBg.height, 
-      loadingBarConfig.progressBg.radius
-    );
-    loadingBarProgressBg.setDepth(11);
+    loadingBarBg.setDepth(12);
 
     // 로딩바 진행바
     const loadingBar = this.add.graphics();
-    loadingBar.setDepth(12);
+    loadingBar.setDepth(13);
+
+    // 로딩 이미지 애니메이션
+    if (!this.anims.exists('loadingAni')) this.anims.create({ key: 'loadingAni', frames: this.anims.generateFrameNumbers('loading', { start: 0, end: 1 }), frameRate: 8, repeat: -1 });
+    const loadingImage = this.add.sprite(loadingBarConfig.x, loadingBarConfig.y - 60, 'loading');
+    loadingImage.setDepth(14);
+    loadingImage.setScale(1.5);
+    loadingImage.play('loadingAni');
 
     // 로딩 진행 상황 처리
     this.load.on('progress', (value) => {
       loadingBar.clear();
-      loadingBar.fillStyle(colorConfig.hex_lollipop, 1);
-      const barWidth = loadingBarConfig.progressBg.width * value;
+      loadingBar.fillStyle(colorConfig.hex_loadingBar, 1); // bar 색상
+      const barWidth = loadingBarConfig.width * value;
       loadingBar.fillRoundedRect(
-        loadingBarConfig.progress.x, 
-        loadingBarConfig.progress.y, 
+        loadingBarConfig.x, 
+        loadingBarConfig.y, 
         barWidth, 
-        loadingBarConfig.progress.height, 
-        loadingBarConfig.progress.radius
+        loadingBarConfig.height, 
+        loadingBarConfig.radius
       );
+      
+      // 로딩 이미지 위치를 진행도에 따라 이동 (로딩바 범위 내에서)
+      const imageMargin = 50; // 좌우 여백
+      const moveRange = loadingBarConfig.width - (imageMargin * 2);
+      const imageX = loadingBarConfig.x + imageMargin + (moveRange * value);
+      loadingImage.setX(imageX);
     });
 
     // 로딩 완료 시 정리
-    this.load.on('complete', () => [loadingBarBg, loadingBarProgressBg, loadingBar].forEach(element => element.destroy()));
+    this.load.on('complete', () => [blueOutline, whiteOutline, loadingBarBg, loadingBar, loadingImage].forEach(element => element.destroy()));
   }
 
   // ========================================================================================
@@ -296,9 +324,7 @@ export default class MenuScene extends Phaser.Scene {
     guideImage.setScale(0);
     [leftArrow, rightArrow, pageIndicator, closeButton].forEach(element => element.setAlpha(0));
 
-    // 가이드 이미지 애니메이션
-    this.tweens.add({ targets: guideImage, scaleX: 0.8, scaleY: 0.8, duration: 300, ease: 'Back.out' });
-    // 기타 요소들 페이드인
-    this.tweens.add({ targets: [leftArrow, rightArrow, pageIndicator, closeButton], alpha: 1, duration: 300, ease: 'Power2.out', delay: 150 });
+    this.tweens.add({ targets: guideImage, scaleX: 0.8, scaleY: 0.8, duration: 300, ease: 'Back.out' }); // 가이드 이미지 애니메이션
+    this.tweens.add({ targets: [leftArrow, rightArrow, pageIndicator, closeButton], alpha: 1, duration: 300, ease: 'Power2.out', delay: 150 }); // 기타 요소들 페이드인
   }
 }
