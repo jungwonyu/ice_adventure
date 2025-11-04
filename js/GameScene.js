@@ -818,7 +818,7 @@ export default class GameScene extends Phaser.Scene {
       loop: true
     });
 
-    this.doubleTimer = this.time.delayedCall(10000, () => { // 새로운 10초 타이머 시작
+    this.doubleTimer = this.time.delayedCall(20000, () => { // 새로운 20초 타이머 시작
       if (this.bulletTimer) {
         this.bulletTimer.destroy();
       }
@@ -852,11 +852,11 @@ export default class GameScene extends Phaser.Scene {
   // ------------------------------------------------------------------------------------ 
   // 더블 타이머 UI 업데이트
   updateDoubleTimerUI() {
-    if (!this.doubleTimerBar || !this.player) return;
+    if (!this.doubleTimerBg || !this.player || !this.doubleCountdownText) return;
 
     const elapsed = this.time.now - this.doubleStartTime;
     const remaining = Math.max(0, this.doubleDuration - elapsed);
-    const progress = remaining / this.doubleDuration;
+    const countdown = Math.ceil(remaining / 1000); // 초 단위로 변환
 
     // UI를 플레이어 위에 위치시키기
     const playerX = this.player.x;
@@ -865,52 +865,49 @@ export default class GameScene extends Phaser.Scene {
     // 모든 UI 요소의 위치 업데이트
     this.doubleTimerBg.x = playerX;
     this.doubleTimerBg.y = playerY;
-    this.doubleTimerBarBg.x = playerX;
-    this.doubleTimerBarBg.y = playerY;
-    this.doubleTimerBar.x = playerX;
-    this.doubleTimerBar.y = playerY;
+    this.doubleCountdownText.x = playerX;
+    this.doubleCountdownText.y = playerY;
 
-    // 진행 바 그리기
-    this.doubleTimerBar.clear();
+    // 카운트다운 텍스트 업데이트
+    this.doubleCountdownText.setText(countdown.toString());
     
-    // 진행률에 따른 색상 결정
-    let color = colorConfig.hex_greenTea; // 기본 색상 (녹차)
-    if (progress < 0.3) {
-      color = colorConfig.hex_lollipop; // 빨강 (롤리팝)
-    } else if (progress < 0.6) {
-      color = colorConfig.hex_candy; // 노랑 (캔디)
+    // 시간에 따른 색상 변경
+    if (countdown <= 5) {
+      this.doubleCountdownText.setFill(colorConfig.color_lollipop); // 빨강
+    } else if (countdown <= 10) {
+      this.doubleCountdownText.setFill(colorConfig.color_candy); // 노랑
+    } else {
+      this.doubleCountdownText.setFill(colorConfig.color_snow); // 흰색
     }
     
-    this.doubleTimerBar.fillStyle(color, 1);
-    
-    // 진행 바의 너비 계산
-    const barWidth = 90 * progress;
-    this.doubleTimerBar.fillRoundedRect(-45, -25, barWidth, 10, 5);
+    // 카운트다운이 0이 되면 UI 제거
+    if (countdown <= 0) {
+      this.removeDoubleTimerUI();
+    }
   }
 
   // 더블 타이머 UI 생성
   createDoubleTimerUI() {
     this.removeDoubleTimerUI();
     
-    // 배경 직사각형
+    // 원형 배경
     this.doubleTimerBg = this.add.graphics();
     this.doubleTimerBg.fillStyle(colorConfig.hex_black, 0.7);
-    this.doubleTimerBg.fillRoundedRect(-50, -30, 100, 20, 10);
+    this.doubleTimerBg.fillCircle(0, 0, 35);
     this.doubleTimerBg.setDepth(10);
 
-    // 진행 바 배경
-    this.doubleTimerBarBg = this.add.graphics();
-    this.doubleTimerBarBg.fillStyle(0x333333, 0.8);
-    this.doubleTimerBarBg.fillRoundedRect(-45, -25, 90, 10, 5);
-    this.doubleTimerBarBg.setDepth(11);
-
-    // 진행 바
-    this.doubleTimerBar = this.add.graphics();
-    this.doubleTimerBar.setDepth(12);
+    // 카운트다운 텍스트
+    this.doubleCountdownText = this.add.text(0, 0, '20', {
+      fontSize: '28px',
+      fill: colorConfig.color_snow,
+      fontFamily: 'Cafe24Surround',
+      stroke: colorConfig.color_deepBlue,
+      strokeThickness: 3
+    }).setOrigin(0.5).setDepth(12);
 
     // 시작 시간 저장
     this.doubleStartTime = this.time.now;
-    this.doubleDuration = 10000; // 10초
+    this.doubleDuration = 20000; // 20초
   }
 
   // 더블 타이머 UI 제거
@@ -919,13 +916,9 @@ export default class GameScene extends Phaser.Scene {
       this.doubleTimerBg.destroy();
       this.doubleTimerBg = null;
     }
-    if (this.doubleTimerBarBg) {
-      this.doubleTimerBarBg.destroy();
-      this.doubleTimerBarBg = null;
-    }
-    if (this.doubleTimerBar) {
-      this.doubleTimerBar.destroy();
-      this.doubleTimerBar = null;
+    if (this.doubleCountdownText) {
+      this.doubleCountdownText.destroy();
+      this.doubleCountdownText = null;
     }
   }
 
