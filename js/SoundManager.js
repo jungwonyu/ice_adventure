@@ -93,7 +93,13 @@ export default class SoundManager {
       return null;
     }
     
-    const defaultOptions = { volume: 1.0, loop: false, ...options };
+    // 사운드별 볼륨 설정
+    let volume = 1.0;
+    if (soundKey === 'coinSound') {
+      volume = 0.2; // 코인 사운드 볼륨 낮추기
+    }
+    
+    const defaultOptions = { volume: volume, loop: false, ...options };
     const sound = this.scene.sound.add(soundKey, defaultOptions);
 
     sound.stop();

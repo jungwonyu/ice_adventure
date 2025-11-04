@@ -148,7 +148,7 @@ export default class MenuScene extends Phaser.Scene {
 
   setSoundManager() {
     this.soundManager = SoundManager.getInstance(this);
-    this.soundManager.createSoundButtons();
+    // this.soundManager.createSoundButtons();
     // this.soundManager.setBGM('bgm');
   }
 
