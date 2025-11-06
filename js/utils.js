@@ -1,3 +1,5 @@
+import { colorConfig, FONT_FAMILY } from './Main.js';
+
 export function addHoverEffect(button, scene) {
   button.on('pointerover', () => {
     if (button.texture.key === 'startButton' || button.texture.key === 'howToPlayButton') {
@@ -113,4 +115,17 @@ export function clearGroup(group) {
     return null;
   }
   return null;
+}
+
+export function createTextStyle(options = {}) {
+  return {
+    fontFamily: options.fontFamily || FONT_FAMILY,
+    fontSize: options.fontSize || '20px',
+    fontStyle: options.fontStyle || 'bold',
+    fill: options.fill || colorConfig.color_lollipop,
+    stroke: options.stroke || colorConfig.color_snow,
+    strokeThickness: options.strokeThickness || 4,
+    align: options.align || 'center',
+    ...options
+  };
 }

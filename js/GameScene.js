@@ -1,6 +1,6 @@
 import SoundManager from './SoundManager.js';
 import { colorConfig, levelConfig, FONT_FAMILY } from './Main.js';
-import {  addHoverEffect,  createScaleInAni,  createFadeInAni,  createOverlay,  removeOverlay, createTextEffectAni, createWarningAni, createCustomAni, destroyElement, clearGroup } from './utils.js';
+import {  addHoverEffect,  createScaleInAni,  createFadeInAni,  createOverlay,  removeOverlay, createTextEffectAni, createWarningAni, createCustomAni, destroyElement, clearGroup, createTextStyle } from './utils.js';
 import { OBSTACLE_CONFIGS, getObstacleConfig, getObstacleConfigByType } from './ObstacleConfig.js';
 import { executeBossPattern, getRandomPatternForLevel } from './BossPatterns.js';
 
@@ -207,11 +207,9 @@ export default class GameScene extends Phaser.Scene {
     this.levelBar.setDepth(31);
     this.updateLevelProgressBar();
 
-    this.levelText = this.add.text(this.screenWidth / 2, barY + barHeight / 2, `Level ${this.level}`, {
-      fontSize: '20px',
-      fill: colorConfig.color_black,
-      fontFamily: FONT_FAMILY,
-    }).setOrigin(0.5).setDepth(32);
+    this.levelText = this.add.text(this.screenWidth / 2, barY + barHeight / 2, `Level ${this.level}`, 
+      createTextStyle({  fill: colorConfig.color_black,  stroke: 'transparent',  strokeThickness: 0 })
+    ).setOrigin(0.5).setDepth(32);
   }
 
   updateLevelProgressBar() {
@@ -252,35 +250,16 @@ export default class GameScene extends Phaser.Scene {
     this.isPaused = true;
     this.physics.pause(); // 물리 엔진 일시정지
     this.sound.pauseAll(); // 음악 정지
-    this.children.list.forEach(child => (child.anims && child.anims.currentAnim && child.anims.currentAnim.key !== 'playerDanceAni') && child.anims.pause());
-    this.coins.children.entries.forEach(coin => (coin.anims && coin.anims.currentAnim) && coin.anims.pause());
-    this.shields.children.entries.forEach(shield => (shield.anims && shield.anims.currentAnim) && shield.anims.pause());
-    this.doubles.children.entries.forEach(double => (double.anims && double.anims.currentAnim) && double.anims.pause());
-    this.obstacles.children.entries.forEach(obstacle => (obstacle.anims && obstacle.anims.currentAnim) && obstacle.anims.pause());
-
-    // 타이머들 일시정지
-    if (this.bulletTime) this.bulletTime.paused = true;
-    if (this.obstacleTime) this.obstacleTime.paused = true;
-    if (this.doubleTime) this.doubleTime.paused = true;
-    if (this.bossBulletTime) this.bossBulletTime.paused = true;
+    this.toggleAnimations(true);
+    this.toggleTimers(true);
   }
 
   gameResume() {
     this.isPaused = false;
     this.physics.resume(); // 물리 엔진 재개
     this.sound.resumeAll(); // 음악 재생
-    this.children.list.forEach(child => (child.anims && child.anims.currentAnim && child.anims.currentAnim.key !== 'playerDanceAni') && child.anims.resume());
-    this.coins.children.entries.forEach(coin => (coin.anims && coin.anims.currentAnim) && coin.anims.resume());
-    this.shields.children.entries.forEach(shield => (shield.anims && shield.anims.currentAnim) && shield.anims.resume());
-    this.doubles.children.entries.forEach(double => (double.anims && double.anims.currentAnim) && double.anims.resume());
-    this.obstacles.children.entries.forEach(obstacle => (obstacle.anims && obstacle.anims.currentAnim) && obstacle.anims.resume());
-
-    // 타이머들 재개
-    if (this.bulletTime) this.bulletTime.paused = false;
-    if (this.obstacleTime) this.obstacleTime.paused = false;
-    if (this.doubleTime) this.doubleTime.paused = false;
-    if (this.bossBulletTime) this.bossBulletTime.paused = false;
-    
+    this.toggleAnimations(false);
+    this.toggleTimers(false);
     this.hidePauseMenu(); // 일시정지 UI 제거
   }
 
@@ -289,11 +268,7 @@ export default class GameScene extends Phaser.Scene {
     createCustomAni(this, this.pauseOverlay, { type: 'fillAlpha', to: 1 });
 
     // 다시 시작 버튼
-    this.resumeButton = this.add.image(this.screenWidth / 2 - 140, this.screenHeight / 2 + 20, 'replayButton')
-      .setScale(0)
-      .setAlpha(0)
-      .setDepth(101)
-      .setInteractive();
+    this.resumeButton = this.add.image(this.screenWidth / 2 - 140, this.screenHeight / 2 + 20, 'replayButton').setScale(0).setAlpha(0).setDepth(101).setInteractive();
     addHoverEffect(this.resumeButton, this);
     this.resumeButton.on('pointerdown', () => {
       this.soundManager.playSound('buttonSound');
@@ -303,11 +278,7 @@ export default class GameScene extends Phaser.Scene {
     });
     
     // 끝내기 버튼
-    this.quitButton = this.add.image(this.screenWidth / 2 + 140, this.screenHeight / 2 + 20, 'goHomeButton')
-      .setScale(0)
-      .setAlpha(0)
-      .setDepth(101)
-      .setInteractive();
+    this.quitButton = this.add.image(this.screenWidth / 2 + 140, this.screenHeight / 2 + 20, 'goHomeButton').setScale(0).setAlpha(0).setDepth(101).setInteractive();
     addHoverEffect(this.quitButton, this);
     this.quitButton.on('pointerdown', () => {
       this.soundManager.playSound('buttonSound');
@@ -393,19 +364,16 @@ export default class GameScene extends Phaser.Scene {
 
   // 플레이어 vs 장애물(player 처리)
   playerHitObstacle(player, obstacle) {
-    if (this.isGameOver) return;
     this.handlePlayerHit(player, obstacle);
   }
 
   // 보스 총알 vs 플레이어(player 처리)
   bossBulletHitPlayer(player, bullet) {
-    if (this.isGameOver) return;
     this.handlePlayerHit(player, bullet);
   }
 
   // 보스 vs 플레이어(player 처리)
   bossHitPlayer(player, boss) {
-    if (this.isGameOver) return;
     this.handlePlayerHit(player, null);
   }
 
@@ -417,14 +385,7 @@ export default class GameScene extends Phaser.Scene {
     obstacle.hitCount = (obstacle.hitCount || 0);
     obstacle.hitCount += 1;
 
-    const hitText = this.add.text(obstacle.x, obstacle.y - 30, `Hit ${obstacle.hitCount}`, { 
-      fontFamily: FONT_FAMILY, 
-      fontSize: '20px', 
-      fontStyle: 'bold', 
-      fill: colorConfig.color_lollipop, 
-      stroke: colorConfig.color_snow, 
-      strokeThickness: 4 
-    });
+    const hitText = this.add.text(obstacle.x, obstacle.y - 30, `Hit ${obstacle.hitCount}`, createTextStyle());
 
     this.time.delayedCall(500, () => hitText.destroy());
 
@@ -474,14 +435,7 @@ export default class GameScene extends Phaser.Scene {
     this.score += 10;
     this.scoreUI.setText(this.score);
     
-    const collectText = this.add.text(coin.x, coin.y - 30, '+10', {
-      fontFamily: FONT_FAMILY, 
-      fontSize: '20px', 
-      fontStyle: 'bold', 
-      fill: colorConfig.color_lollipop, 
-      stroke: colorConfig.color_snow, 
-      strokeThickness: 4 
-    });
+    const collectText = this.add.text(coin.x, coin.y - 30, '+10', createTextStyle());
     
     createTextEffectAni(this, collectText);
   }
@@ -523,28 +477,16 @@ export default class GameScene extends Phaser.Scene {
       delay: 500,
       callback: () => {
       if (this.isGameOver || this.isInvincible) return;
-        
-        // 왼쪽 총알 추가
-        const leftBullet = this.playerBullets.get(this.player.x - 25, this.player.y - 50);
-        if (leftBullet) {
-          leftBullet.setScale(0.1);
-          leftBullet.body.setVelocityY(-600);
-        }
-        
-        // 오른쪽 총알 추가
-        const rightBullet = this.playerBullets.get(this.player.x + 25, this.player.y - 50);
-        if (rightBullet) {
-          rightBullet.setScale(0.1);
-          rightBullet.body.setVelocityY(-600);
-        }
+        // ...existing code...
+        this.createPlayerBullet(this.player.x - 25, this.player.y - 50);
+        this.createPlayerBullet(this.player.x + 25, this.player.y - 50);
+        // ...existing code...
       },
       loop: true
     });
 
     this.doubleTime = this.time.delayedCall(20000, () => { // 새로운 20초 타이머 시작
-      if (this.bulletTime) {
-        this.bulletTime.destroy();
-      }
+      if (this.bulletTime) this.bulletTime.destroy();
       
       this.removeDoubleTimerUI(); // 더블 UI 제거
       
@@ -552,11 +494,7 @@ export default class GameScene extends Phaser.Scene {
         delay: 500,
         callback: () => {
         if (this.isGameOver || this.isInvincible) return;
-          const bullet = this.playerBullets.get(this.player.x, this.player.y - 50);
-          if (bullet) {
-            bullet.setScale(0.1);
-            bullet.body.setVelocityY(-600);
-          }
+          this.createPlayerBullet();
         },
         loop: true
       });
@@ -786,13 +724,9 @@ export default class GameScene extends Phaser.Scene {
     this.doubleTimerBg.fillCircle(0, 0, 35);
     this.doubleTimerBg.setDepth(10);
 
-    this.doubleCountdownText = this.add.text(0, 0, '20', {
-      fontSize: '28px',
-      fill: colorConfig.color_snow,
-      fontFamily: FONT_FAMILY,
-      stroke: colorConfig.color_deepBlue,
-      strokeThickness: 3
-    }).setOrigin(0.5).setDepth(12);
+    this.doubleCountdownText = this.add.text(0, 0, '20', 
+      createTextStyle({ fontSize: '28px', fill: colorConfig.color_snow, stroke: colorConfig.color_deepBlue, strokeThickness: 3 })
+    ).setOrigin(0.5).setDepth(12);
 
     this.doubleStartTime = this.time.now;
     this.doubleDuration = 20000; // 20초
@@ -912,11 +846,7 @@ export default class GameScene extends Phaser.Scene {
       delay: 500,
       callback: () => {
         if (this.isGameOver) return;
-        const bullet = this.playerBullets.get(this.player.x, this.player.y - 50);
-        if (bullet) {
-          bullet.setScale(0.1);
-          bullet.body.setVelocityY(-600);
-        }
+        this.createPlayerBullet();
       },
       loop: true
     });
@@ -970,22 +900,15 @@ export default class GameScene extends Phaser.Scene {
     
     // 1. 텍스트
     const infoContainer = this.add.container(this.screenWidth / 2 + 20, this.screenHeight / 2 - 260).setDepth(51).setAlpha(0);
-    const hitText = this.add.text(0, -30, isIncorrectAnswer ? '오답이에요!' : `${currentHitCount + 1}번째 충돌!`, {
-      fontSize: '32px',
-      fill: isIncorrectAnswer ? colorConfig.color_lollipop : colorConfig.color_chocolate, 
-      fontFamily: FONT_FAMILY,
-      align: 'center'
-    }).setOrigin(0.5);
+    const hitText = this.add.text(0, -30, isIncorrectAnswer ? '오답이에요!' : `${currentHitCount + 1}번째 충돌!`, 
+      createTextStyle({ fontSize: '32px', fill: isIncorrectAnswer ? colorConfig.color_lollipop : colorConfig.color_chocolate, stroke: 'transparent', strokeThickness: 0, align: 'center' })
+    ).setOrigin(0.5);
     const walkieIcon = this.add.image(-110, -45, 'walkie').setScale(0.3).setOrigin(0.5);
     infoContainer.add([hitText, walkieIcon]);
 
-    const infoText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 + 10, `워키토키 ${requiredWalkies}개를 사용해 \n긴급 수리를\n요청할 수 있어요!`, {
-      fontSize: '26px',
-      fill: colorConfig.color_deepBlue,
-      fontFamily: FONT_FAMILY,
-      align: 'center',
-      wordWrap: { width: 500 }
-    }).setOrigin(0.5).setDepth(51).setAlpha(0);
+    const infoText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 + 10, `워키토키 ${requiredWalkies}개를 사용해 \n긴급 수리를\n요청할 수 있어요!`, 
+      createTextStyle({ fontSize: '26px', fill: colorConfig.color_deepBlue, stroke: 'transparent', strokeThickness: 0, align: 'center', wordWrap: { width: 500 } })
+    ).setOrigin(0.5).setDepth(51).setAlpha(0);
 
     createFadeInAni(this, [infoContainer, infoText], { delay: 300 });
 
@@ -1045,13 +968,9 @@ export default class GameScene extends Phaser.Scene {
     createScaleInAni(this, quizContainer, 0.8, { scaleY: 0.8 }); // 팝업 등장 애니메이션
 
     // 퀴즈 질문
-    const questionText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 - 70, randomQuiz.question, {
-      fontSize: '28px',
-      fill: colorConfig.color_lollipop,
-      fontFamily: FONT_FAMILY,
-      align: 'center',
-      wordWrap: { width: 500 }
-    }).setOrigin(0.5).setDepth(61).setAlpha(0);
+    const questionText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 - 70, randomQuiz.question, 
+      createTextStyle({ fontSize: '28px', fill: colorConfig.color_lollipop, align: 'center', wordWrap: { width: 500 } })
+    ).setOrigin(0.5).setDepth(61).setAlpha(0);
     
     createFadeInAni(this, questionText, { delay: 300 }); // 텍스트들 페이드인 애니메이션
     
@@ -1138,12 +1057,9 @@ export default class GameScene extends Phaser.Scene {
     this.soundManager.playSound('correctSound');
     const danceSprite = this.add.sprite(this.screenWidth / 2, this.screenHeight / 2, 'playerDance').setDepth(70).setScale(1.2);
     danceSprite.play('playerDanceAni');
-    const successText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 - 200, '정답입니다!', {
-      fontSize: '40px',
-      fill: colorConfig.color_lollipop,
-      fontFamily: FONT_FAMILY,
-      align: 'center'
-    }).setOrigin(0.5).setDepth(70);
+    const successText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 - 200, '정답입니다!', 
+      createTextStyle({ fontSize: '40px', fill: colorConfig.color_lollipop, align: 'center' })
+    ).setOrigin(0.5).setDepth(70);
     
     this.time.delayedCall(2000, () => {
       successText.destroy();
@@ -1219,9 +1135,7 @@ export default class GameScene extends Phaser.Scene {
       this.doubleTime.destroy();
       this.doubleTime = null;
     }
-    if (this.bulletTime) {
-      this.bulletTime.destroy();
-    }
+    if (this.bulletTime) this.bulletTime.destroy();
     if (this.bossBulletTime) {
       this.bossBulletTime.destroy();
       this.bossBulletTime = null;
@@ -1236,11 +1150,7 @@ export default class GameScene extends Phaser.Scene {
       delay: 500,
       callback: () => {
       if (this.isGameOver || this.isInvincible) return;
-        const bullet = this.playerBullets.get(this.player.x, this.player.y - 50);
-        if (bullet) {
-          bullet.setScale(0.1);
-          bullet.body.setVelocityY(-600);
-        }
+        this.createPlayerBullet();
       },
       loop: true
     });
@@ -1258,16 +1168,11 @@ export default class GameScene extends Phaser.Scene {
 
   showLevelUpNotification() {
     this.soundManager.playSound('explosionSound');
-
     const nextContainer = this.add.image(this.screenWidth / 2, this.screenHeight / 2, 'nextContainer').setScale(0).setDepth(20).setAlpha(0);
-    const levelText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 + 50, `Level ${this.level}`, {
-      fontSize: '45px',
-      fill: colorConfig.color_lollipop,
-      fontFamily: FONT_FAMILY,
-      align: 'center'
-    }).setOrigin(0.5).setDepth(21).setAlpha(0);
+    const levelText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 + 50, `Level ${this.level}`, 
+      createTextStyle({ fontSize: '45px', fill: colorConfig.color_lollipop, align: 'center' })
+    ).setOrigin(0.5).setDepth(21).setAlpha(0);
 
-    // 팝업 등장 애니메이션 - utils 함수 사용
     createScaleInAni(this, [nextContainer, levelText], 1, { duration: 500 });
 
     createOverlay(this, 19);
@@ -1293,13 +1198,9 @@ export default class GameScene extends Phaser.Scene {
   showGameComplete() {
     this.soundManager.setBGM('finalSound');
     const finishBg = this.add.image(this.screenWidth / 2, this.screenHeight / 2, 'finishBackground').setDepth(80).setAlpha(0);
-    const finalScoreText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 + 60, `최종 점수: ${this.score}`, {
-      fontSize: '36px',
-      fill: colorConfig.color_chocolate,
-      fontFamily: FONT_FAMILY,
-      align: 'center',
-      padding: { x: 20, y: 10 }
-    }).setOrigin(0.5).setDepth(81).setAlpha(0);
+    const finalScoreText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 + 60, `최종 점수: ${this.score}`, 
+      createTextStyle({ fontSize: '36px', fill: colorConfig.color_chocolate, stroke: 'transparent', strokeThickness: 0, align: 'center', padding: { x: 20, y: 10 } })
+    ).setOrigin(0.5).setDepth(81).setAlpha(0);
 
     const menuButton = this.add.image(this.screenWidth / 2, this.screenHeight - 80, 'goHomeButton').setOrigin(0.5).setDepth(81).setInteractive().setAlpha(0).setScale(0.3);
     addHoverEffect(menuButton, this);
@@ -1307,6 +1208,33 @@ export default class GameScene extends Phaser.Scene {
     createFadeInAni(this, [finishBg, finalScoreText, menuButton], { duration: 500, delay: 200 });
 
     menuButton.on('pointerdown', () => this.handleQuit()); // 버튼 클릭 시 메인 메뉴로 이동
+  }
+
+  toggleAnimations(isPaused) { // 애니메이션 통합 처리
+    const groups = [this.children.list, this.coins.children.entries, this.shields.children.entries, this.doubles.children.entries, this.obstacles.children.entries];
+    const action = isPaused ? 'pause' : 'resume';
+    
+    groups.forEach(group => {
+      group.forEach(item => {
+        if (item.anims && item.anims.currentAnim && item.anims.currentAnim.key !== 'playerDanceAni') item.anims[action]();
+      });
+    });
+  }
+
+  toggleTimers(isPaused) { // 타이머 통합 처리
+    const timers = [this.bulletTime, this.obstacleTime, this.doubleTime, this.bossBulletTime];
+    timers.forEach(timer => {
+      if (timer) timer.paused = isPaused;
+    });
+  }
+
+  createPlayerBullet(x = this.player.x, y = this.player.y - 50) { // 총알 생성 공통 함수
+    const bullet = this.playerBullets.get(x, y);
+    if (bullet) {
+      bullet.setScale(0.1);
+      bullet.body.setVelocityY(-600);
+    }
+    return bullet;
   }
 
   handleQuit() { // 게임 끝내기
