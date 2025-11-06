@@ -1,109 +1,215 @@
 import { addHoverEffect } from './utils.js';
 
+// 사운드 관련 상수 정의
+const SOUND_CONFIG = {
+  BUTTON_POSITION: { x: 70, y: 60 },
+  BUTTON_SCALE: 0.2,
+  BUTTON_DEPTH: 1000,
+  DEFAULT_BGM_VOLUME: 0.5,
+  DEFAULT_SOUND_VOLUME: 1.0,
+  VOLUMES: {
+    coinSound: 0.3,
+    buttonSound: 0.8,
+    explosionSound: 0.6
+  }
+};
+
 export default class SoundManager {
   static instance = null;
+  
   static getInstance(scene) {
+    if (!scene) {
+      console.warn('SoundManager: Scene is required');
+      return null;
+    }
+    
     if (!SoundManager.instance) {
       SoundManager.instance = new SoundManager(scene);
     } else {
-      SoundManager.instance.scene = scene;
+      SoundManager.instance.updateScene(scene);
     }
     return SoundManager.instance;
   }
+
   constructor(scene) {
     this.scene = scene;
-    this.isBGMMuted = false; // BGM 뮤트 상태만 관리
-    this.muteButton = null;
-    this.soundButton = null;
-    this.bgm = null;
+    this.muteStates = {
+      bgm: false,
+      sfx: false
+    };
+    this.buttons = {
+      bgm: { mute: null, sound: null }
+    };
+    this.currentBGM = null;
+    this.soundCategories = this.initializeSoundCategories();
+  }
+
+  initializeSoundCategories() {
+    return {
+      bgm: ['bgm', 'bossBgm', 'coinBgm', 'nextBgm'],
+      sfx: ['buttonSound', 'coinSound', 'helperSound', 'bulletHitSound', 
+            'explosionSound', 'bossShootSound', 'correctSound', 'incorrectSound', 
+            'countdownSound', 'nextLevelSound', 'finalSound', 'gameOverSound', 'hitPlayerSound']
+    };
+  }
+
+  updateScene(scene) {
+    if (scene !== this.scene) {
+      this.scene = scene;
+    }
   }
 
   createSoundButtons() {
     const { width, height } = this.scene.scale;
+    const x = width - SOUND_CONFIG.BUTTON_POSITION.x;
+    const y = height - SOUND_CONFIG.BUTTON_POSITION.y;
 
-    // 음소거 버튼 (BGM 활성화 상태)
-    this.muteButton = this.scene.add.image(width - 70, height - 60, 'soundButton').setVisible(!this.isBGMMuted).setScale(0.2).setDepth(1000).setInteractive();
-    addHoverEffect(this.muteButton, this.scene);
-    this.muteButton.on('pointerdown', () => this.toggleBGMMute());
-
-    // 사운드 버튼 (BGM 뮤트 상태)
-    this.soundButton = this.scene.add.image(width - 70, height - 60, 'muteButton').setVisible(this.isBGMMuted).setScale(0.2).setDepth(1000).setInteractive();
-    addHoverEffect(this.soundButton, this.scene);
-    this.soundButton.on('pointerdown', () => this.toggleBGMMute());
-
-    return { muteButton: this.muteButton, soundButton: this.soundButton };
+    this.createButtonPair('bgm', x, y);
+    
+    return this.buttons;
   }
 
-  toggleBGMMute() {
-    this.isBGMMuted = !this.isBGMMuted;
-    this.muteButton.setVisible(!this.isBGMMuted);
-    this.soundButton.setVisible(this.isBGMMuted);
+  createButtonPair(type, x, y) {
+    const isActive = !this.muteStates[type];
+    
+    this.buttons[type].sound = this.createButton('soundButton', x, y, isActive, () => this.toggleMute(type)); // 활성 상태 버튼 (소리 켜짐)
+    this.buttons[type].mute = this.createButton('muteButton', x, y, !isActive, () => this.toggleMute(type)); // 뮤트 상태 버튼 (소리 꺼짐)  
+  }
 
-    if (this.isBGMMuted) { // BGM 뮤트
-      if (this.bgm && this.bgm.isPlaying) {
-        this.bgm.pause();
+  createButton(texture, x, y, visible, callback) {
+    const button = this.scene.add.image(x, y, texture).setVisible(visible).setScale(SOUND_CONFIG.BUTTON_SCALE).setDepth(SOUND_CONFIG.BUTTON_DEPTH).setInteractive();
+      
+    addHoverEffect(button, this.scene);
+    button.on('pointerdown', callback);
+    
+    return button;
+  }
+
+  toggleMute(type) {
+    this.muteStates[type] = !this.muteStates[type];
+    this.updateButtonVisibility(type);
+    
+    if (type === 'bgm') {
+      this.handleBGMToggle();
+    }
+    
+    this.playSound('buttonSound'); // 버튼 효과음은 항상 재생
+  }
+
+  updateButtonVisibility(type) {
+    const isActive = !this.muteStates[type];
+    this.buttons[type].sound.setVisible(isActive);
+    this.buttons[type].mute.setVisible(!isActive);
+  }
+
+  handleBGMToggle() {
+    if (!this.currentBGM) return;
+    
+    if (this.muteStates.bgm) {
+      if (this.currentBGM.isPlaying) {
+        this.currentBGM.pause();
       }
-    } else { // BGM 뮤트 해제
-      if (this.bgm && this.bgm.isPaused) {
-        this.bgm.resume();
-      } else if (this.bgm && !this.bgm.isPlaying) {
-        this.bgm.play();
+    } else {
+      if (this.currentBGM.isPaused) {
+        this.currentBGM.resume();
+      } else if (!this.currentBGM.isPlaying) {
+        this.currentBGM.play();
       }
     }
-
-    // 버튼 클릭 효과음은 항상 재생 (BGM 뮤트와 무관)
-    this.playSound('buttonSound');
   }
 
   setBGM(bgmKey) {
-    if (this.bgm) {
-      if (this.bgm.key === bgmKey) {
-        if (!this.bgm.isPlaying && !this.isBGMMuted) {
-          this.bgm.play();
-        }
-        return;
-      } else {
-        this.bgm.stop();
+    if (this.currentBGM?.key === bgmKey) { // 동일한 BGM이 이미 재생 중이면 그대로 유지
+      if (!this.currentBGM.isPlaying && !this.muteStates.bgm) {
+        this.currentBGM.play();
       }
+      return;
     }
-    this.bgm = this.scene.sound.add(bgmKey, { loop: true, volume: 0.5 });
-    if (!this.isBGMMuted) {
-      this.bgm.play();
+    
+    this.stopCurrentBGM();
+    this.createNewBGM(bgmKey);
+  }
+
+  stopCurrentBGM() {
+    if (this.currentBGM) {
+      this.currentBGM.stop();
+      this.currentBGM.destroy();
+    }
+  }
+
+  createNewBGM(bgmKey) {
+    this.currentBGM = this.scene.sound.add(bgmKey, { loop: true, volume: SOUND_CONFIG.DEFAULT_BGM_VOLUME });
+    
+    if (!this.muteStates.bgm) {
+      this.currentBGM.play();
     }
   }
 
   playBGM() {
-    if (this.bgm && !this.isBGMMuted) this.bgm.play();
+    if (this.currentBGM && !this.muteStates.bgm) {
+      this.currentBGM.play();
+    }
   }
 
   stopBGM() {
-    if (this.bgm) this.bgm.stop();
+    if (this.currentBGM) {
+      this.currentBGM.stop();
+    }
   }
 
   pauseBGM() {
-    if (this.bgm && this.bgm.isPlaying) this.bgm.pause();
+    if (this.currentBGM && this.currentBGM.isPlaying) {
+      this.currentBGM.pause();
+    }
   }
 
   playSound(soundKey, options = {}) {
-    // BGM 파일인지 확인 (파일명에 'bgm'이 포함되어 있는지 체크)
-    const isBGMSound = soundKey.toLowerCase().includes('bgm');
+    const soundType = this.getSoundType(soundKey);
     
-    // BGM 소리인 경우 BGM 뮤트 상태 확인, 일반 효과음은 항상 재생
-    if (isBGMSound && this.isBGMMuted) {
+    if (this.muteStates[soundType]) {
       return null;
     }
     
-    // 사운드별 볼륨 설정
-    let volume = 1.0;
-    if (soundKey === 'coinSound') {
-      volume = 0.2; // 코인 사운드 볼륨 낮추기
-    }
+    const volume = SOUND_CONFIG.VOLUMES[soundKey] || SOUND_CONFIG.DEFAULT_SOUND_VOLUME;
+    const soundOptions = {  volume,  loop: false,  ...options };
     
-    const defaultOptions = { volume: volume, loop: false, ...options };
-    const sound = this.scene.sound.add(soundKey, defaultOptions);
+    return this.createAndPlaySound(soundKey, soundOptions);
+  }
 
-    sound.stop();
+  getSoundType(soundKey) {
+    if (this.soundCategories.bgm.includes(soundKey)) {
+      return 'bgm';
+    }
+    return 'sfx';
+  }
+
+  createAndPlaySound(soundKey, options) {
+    const sound = this.scene.sound.add(soundKey, options);
+    sound.stop(); // 기존 사운드 정지
     sound.play();
     return sound;
+  }
+
+  cleanup() {
+    this.stopCurrentBGM();
+    
+    // 버튼들 정리
+    Object.values(this.buttons).forEach(buttonPair => {
+      Object.values(buttonPair).forEach(button => {
+        if (button) {
+          button.destroy();
+        }
+      });
+    });
+    
+    // 상태 초기화
+    this.buttons = {
+      bgm: { mute: null, sound: null }
+    };
+  }
+
+  destroy() {
+    this.cleanup();
+    SoundManager.instance = null;
   }
 }

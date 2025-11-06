@@ -7,7 +7,6 @@ const config = {
   width: 720,
   height: 1280,
   parent: 'game-container',
-  // transparent: true, // 캔버스 배경을 투명하게 설정
   backgroundColor: 0xc9effa,
   physics: {
     default: 'arcade',
@@ -49,20 +48,23 @@ export const colorConfig = {
   hex_black: 0x000000,
   hex_loadingBg: 0xc9effa,
   hex_loadingBar: 0x94ccdc,
+  hex_gray: 0x888888,
 };
 
 export const levelConfig = {
-  1: { bossDistance: 3000, bossBullet: 3, bossHit: 30, obstacleCount: 1, walkieReward: 1 },
-  2: { bossDistance: 6000, bossBullet: 3, bossHit: 35, obstacleCount: 1, walkieReward: 3 },
-  3: { bossDistance: 9000, bossBullet: 3, bossHit: 40, obstacleCount: 1, walkieReward: 5 },
-  4: { bossDistance: 12000, bossBullet: 5, bossHit: 45, obstacleCount: 2, walkieReward: 7 },
-  5: { bossDistance: 15000, bossBullet: 5, bossHit: 50, obstacleCount: 2, walkieReward: 9 },
-  6: { bossDistance: 18000, bossBullet: 5, bossHit: 55, obstacleCount: 2, walkieReward: 11 },
-  7: { bossDistance: 21000, bossBullet: 7, bossHit: 60, obstacleCount: 3, walkieReward: 13 },
-  8: { bossDistance: 24000, bossBullet: 7, bossHit: 65, obstacleCount: 3, walkieReward: 15 },
-  9: { bossDistance: 27000, bossBullet: 7, bossHit: 70, obstacleCount: 3, walkieReward: 17 },
-  10: { bossDistance: 30000, bossBullet: 7, bossHit: 75, obstacleCount: 3, walkieReward: 19 }
+  1: { bossDistance: 3000, bossBullet: 3, bossHit: 30, obstacleNum: 1, walkieReward: 1 },
+  2: { bossDistance: 6000, bossBullet: 3, bossHit: 35, obstacleNum: 1, walkieReward: 3 },
+  3: { bossDistance: 9000, bossBullet: 3, bossHit: 40, obstacleNum: 1, walkieReward: 5 },
+  4: { bossDistance: 12000, bossBullet: 5, bossHit: 45, obstacleNum: 2, walkieReward: 7 },
+  5: { bossDistance: 15000, bossBullet: 5, bossHit: 50, obstacleNum: 2, walkieReward: 9 },
+  6: { bossDistance: 18000, bossBullet: 5, bossHit: 55, obstacleNum: 2, walkieReward: 11 },
+  7: { bossDistance: 21000, bossBullet: 7, bossHit: 60, obstacleNum: 3, walkieReward: 13 },
+  8: { bossDistance: 24000, bossBullet: 7, bossHit: 65, obstacleNum: 3, walkieReward: 15 },
+  9: { bossDistance: 27000, bossBullet: 7, bossHit: 70, obstacleNum: 3, walkieReward: 17 },
+  10: { bossDistance: 30000, bossBullet: 7, bossHit: 75, obstacleNum: 3, walkieReward: 19 }
 };
 
+export const FONT_FAMILY = 'Cafe24Surround';
+
 const game = new Phaser.Game(Object.assign(config, colorConfig, levelConfig));
-game.scene.start('Boot', { colors: colorConfig, levels: levelConfig });
+game.scene.start('Boot');

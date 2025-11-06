@@ -1,5 +1,4 @@
 export function addHoverEffect(button, scene) {
-
   button.on('pointerover', () => {
     if (button.texture.key === 'startButton' || button.texture.key === 'howToPlayButton') {
       button.setTexture(button.texture.key + 'Hover');
@@ -15,4 +14,95 @@ export function addHoverEffect(button, scene) {
     button.setScale(button.scaleX / 1.1);
     scene.game.canvas.style.cursor = 'default';
   });
+}
+
+export function createFadeInAni(scene, targets, options = {}) {
+  const defaultOptions = {
+    alpha: 1,
+    duration: 300,
+    ease: 'Power2.out',
+    delay: 0
+  };
+  
+  const animOptions = { ...defaultOptions, ...options, targets };
+  return scene.tweens.add(animOptions);
+}
+
+export function createScaleInAni(scene, targets, scale = 1, options = {}) {
+  const defaultOptions = {
+    alpha: 1,
+    duration: 400,
+    scaleX: scale,
+    scaleY: scale,
+    ease: 'Back.out',
+    delay: 100
+  };
+  
+  const animOptions = { ...defaultOptions, ...options, targets };
+  return scene.tweens.add(animOptions);
+}
+
+export function createOverlay(scene, depth = 45, alpha = 0.7) {
+  if (scene.overlay) scene.overlay.destroy();
+  
+  scene.overlay = scene.add.rectangle(
+    scene.screenWidth / 2, 
+    scene.screenHeight / 2, 
+    scene.screenWidth, 
+    scene.screenHeight, 
+    '0x000000', 
+    alpha
+  ).setDepth(depth).setInteractive();
+  
+  return scene.overlay;
+}
+
+export function removeOverlay(scene) {
+  if (scene.overlay) {
+    scene.overlay.destroy();
+    scene.overlay = null;
+  }
+}
+
+export function createTextEffectAni(scene, target, options = {}) {
+  const defaultOptions = {
+    y: target.y - 50,
+    alpha: 0,
+    duration: 800,
+    ease: 'Power2.out'
+  };
+  
+  const animOptions = { ...defaultOptions, ...options, targets: target };
+  return scene.tweens.add({...animOptions,onComplete: () => target.destroy()});
+}
+
+export function createWarningAni(scene, target, options = {}) {
+  const defaultOptions = {
+    alpha: 0.2,
+    duration: 300,
+    yoyo: true,
+    repeat: 7,
+    ease: 'Power2.inOut'
+  };
+  
+  const animOptions = { ...defaultOptions, ...options, targets: target };
+  return scene.tweens.add(animOptions);
+}
+
+export function createCustomAni(scene, target, options = {}) {
+  const defaultOptions = {
+    duration: 300,
+    ease: 'Power2.out'
+  };
+  
+  const animOptions = { ...defaultOptions, ...options, targets: target };
+  return scene.tweens.add(animOptions);
+}
+
+export function destroyElement(element) {
+  if (element) {
+    element.destroy();
+    return null;
+  }
+  return null;
 }
