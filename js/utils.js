@@ -106,3 +106,11 @@ export function destroyElement(element) {
   }
   return null;
 }
+
+export function clearGroup(group) {
+  if (group) {
+    group.clear(true, true);
+    return null;
+  }
+  return null;
+}

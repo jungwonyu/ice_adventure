@@ -1,16 +1,13 @@
 import SoundManager from './SoundManager.js';
 import { colorConfig, levelConfig, FONT_FAMILY } from './Main.js';
-import {  addHoverEffect,  createScaleInAni,  createFadeInAni,  createOverlay,  removeOverlay, createTextEffectAni, createWarningAni, createCustomAni, destroyElement, clearGroup } from './utils.js';
+import {  addHoverEffect,  createScaleInAni,  createFadeInAni,  createOverlay,  removeOverlay, createTextEffectAni, createWarningAni, createCustomAni, destroyElement } from './utils.js';
 import { OBSTACLE_CONFIGS, getObstacleConfig, getObstacleConfigByType } from './ObstacleConfig.js';
 import { executeBossPattern, getRandomPatternForLevel } from './BossPatterns.js';
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super('GameScene');
-    this.initVariables();
-  }
 
-  initVariables() {
     // 화면 및 기본
     this.screenWidth = 0;
     this.screenHeight = 0;
@@ -45,7 +42,6 @@ export default class GameScene extends Phaser.Scene {
     this.maxObstacles = 30; // 최대 장애물 개수
     
     // 게임 상태
-    this.dragOffsetX = 0;
     this.score = 0;
     this.distance = 0;
     this.level = 1;
@@ -59,7 +55,6 @@ export default class GameScene extends Phaser.Scene {
     this.isBossShown = false;
     this.isInvincible = false; // 쉴드 벗겨진 후 무적 상태
     this.isRevivePopupShown = false; // 충돌 팝업 중복 방지
-    this.isDragging = false;
 
     // UI 요소들
     this.scoreUI = null;
@@ -69,7 +64,11 @@ export default class GameScene extends Phaser.Scene {
     this.levelBg = null;
     this.levelBar = null;
     this.levelText = null;
+
+    this.isDragging = false;
+    this.dragOffsetX = 0;
   }
+
   // ------------------------------------------------------------------------------------
   // CREATE
   // ------------------------------------------------------------------------------------
@@ -116,17 +115,19 @@ export default class GameScene extends Phaser.Scene {
   }
 
   setCollisions() {
-    this.physics.add.overlap(this.player, this.obstacles, this.playerHitObstacle, null, this); // player vs obstacle
-    this.physics.add.overlap(this.player, this.bossBullets, this.bossBulletHitPlayer, null, this); // player vs boss bullet
-    this.physics.add.overlap(this.playerBullets, this.obstacles, this.playerBulletHitObstacle, null, this); // playerBullet vs obstacle
-    this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this); // player vs coin
-    this.physics.add.overlap(this.player, this.shields, this.collectShield, null, this); // player vs shield
-    this.physics.add.overlap(this.player, this.doubles, this.collectDouble, null, this); // player vs double
-    this.physics.add.overlap(this.player, this.walkies, this.collectWalkie, null, this); // player vs walkie
+    this.physics.add.overlap(this.player, this.obstacles, this.playerHitObstacle, null, this); // player vs obstacle 충돌 처리
+    this.physics.add.overlap(this.player, this.bossBullets, this.bossBulletHitPlayer, null, this); // player vs boss bullet 충돌 처리
+    this.physics.add.overlap(this.playerBullets, this.obstacles, this.playerBulletHitObstacle, null, this); // playerBullet vs obstacle 충돌 처리
+    
+    this.physics.add.overlap(this.player, this.coins, this.collectCoin, null, this); // player vs coin 충돌 처리
+    this.physics.add.overlap(this.player, this.shields, this.collectShield, null, this); // player vs shield 충돌 처리
+    this.physics.add.overlap(this.player, this.doubles, this.collectDouble, null, this); // player vs double 충돌 처리
+    this.physics.add.overlap(this.player, this.walkies, this.collectWalkie, null, this); // player vs walkie 충돌 처리
   }
 
   setInput() {
     this.cursors = this.input.keyboard.createCursorKeys();
+
     // 모바일/PC 드래그 이벤트 등록
     this.input.on('pointerdown', (pointer) => {
       if (this.player && Phaser.Math.Distance.Between(pointer.x, pointer.y, this.player.x, this.player.y) < 150) {
@@ -189,6 +190,7 @@ export default class GameScene extends Phaser.Scene {
     icon.setScale(config.iconScale);
     if (hasAnimation) icon.play(config.animation);
     const text = this.add.text(20, 0, config.initialValue, { fontSize: '24px', fill: config.textColor, fontFamily: FONT_FAMILY }).setOrigin(0.5);
+
     container.add([bg, icon, text]);
 
     return { container, icon, text };
@@ -252,12 +254,30 @@ export default class GameScene extends Phaser.Scene {
     this.isPaused = true;
     this.physics.pause(); // 물리 엔진 일시정지
     this.sound.pauseAll(); // 음악 정지
-    this.children.list.forEach(child => (child.anims && child.anims.currentAnim && child.anims.currentAnim.key !== 'playerDanceAni') && child.anims.pause());
-    this.coins.children.entries.forEach(coin => (coin.anims && coin.anims.currentAnim) && coin.anims.pause());
-    this.shields.children.entries.forEach(shield => (shield.anims && shield.anims.currentAnim) && shield.anims.pause());
-    this.doubles.children.entries.forEach(double => (double.anims && double.anims.currentAnim) && double.anims.pause());
-    this.obstacles.children.entries.forEach(obstacle => (obstacle.anims && obstacle.anims.currentAnim) && obstacle.anims.pause());
-
+    
+    // 개별 애니메이션들만 선택적으로 일시정지 (playerDance 제외)
+    this.children.list.forEach(child => {
+      if (child.anims && child.anims.currentAnim) {
+        if (child.anims.currentAnim.key !== 'playerDanceAni') {
+          child.anims.pause();
+        }
+      }
+    });
+    
+    // 개별 그룹 객체 애니메이션 정지
+    this.coins.children.entries.forEach(coin => {
+      if (coin.anims && coin.anims.currentAnim) coin.anims.pause();
+    });
+    this.shields.children.entries.forEach(shield => {
+      if (shield.anims && shield.anims.currentAnim) shield.anims.pause();
+    });
+    this.doubles.children.entries.forEach(double => {
+      if (double.anims && double.anims.currentAnim) double.anims.pause();
+    });
+    this.obstacles.children.entries.forEach(obstacle => {
+      if (obstacle.anims && obstacle.anims.currentAnim) obstacle.anims.pause();
+    });
+    
     // 타이머들 일시정지
     if (this.bulletTime) this.bulletTime.paused = true;
     if (this.obstacleTime) this.obstacleTime.paused = true;
@@ -269,19 +289,38 @@ export default class GameScene extends Phaser.Scene {
     this.isPaused = false;
     this.physics.resume(); // 물리 엔진 재개
     this.sound.resumeAll(); // 음악 재생
-    this.children.list.forEach(child => (child.anims && child.anims.currentAnim && child.anims.currentAnim.key !== 'playerDanceAni') && child.anims.resume());
-    this.coins.children.entries.forEach(coin => (coin.anims && coin.anims.currentAnim) && coin.anims.resume());
-    this.shields.children.entries.forEach(shield => (shield.anims && shield.anims.currentAnim) && shield.anims.resume());
-    this.doubles.children.entries.forEach(double => (double.anims && double.anims.currentAnim) && double.anims.resume());
-    this.obstacles.children.entries.forEach(obstacle => (obstacle.anims && obstacle.anims.currentAnim) && obstacle.anims.resume());
-
+    
+    // 개별 애니메이션들 재개 (playerDance는 이미 실행 중이므로 건드리지 않음)
+    this.children.list.forEach(child => {
+      if (child.anims && child.anims.currentAnim && child.anims.isPaused) {
+        if (child.anims.currentAnim.key !== 'playerDanceAni') {
+          child.anims.resume();
+        }
+      }
+    });
+    
+    // 개별 그룹 객체 애니메이션 재개
+    this.coins.children.entries.forEach(coin => {
+      if (coin.anims && coin.anims.currentAnim) coin.anims.resume();
+    });
+    this.shields.children.entries.forEach(shield => {
+      if (shield.anims && shield.anims.currentAnim) shield.anims.resume();
+    });
+    this.doubles.children.entries.forEach(double => {
+      if (double.anims && double.anims.currentAnim) double.anims.resume();
+    });
+    this.obstacles.children.entries.forEach(obstacle => {
+      if (obstacle.anims && obstacle.anims.currentAnim) obstacle.anims.resume();
+    });
+    
     // 타이머들 재개
     if (this.bulletTime) this.bulletTime.paused = false;
     if (this.obstacleTime) this.obstacleTime.paused = false;
     if (this.doubleTime) this.doubleTime.paused = false;
     if (this.bossBulletTime) this.bossBulletTime.paused = false;
     
-    this.hidePauseMenu(); // 일시정지 UI 제거
+    // 일시정지 UI 제거
+    this.hidePauseMenu();
   }
 
   showPauseMenu() {
@@ -315,6 +354,7 @@ export default class GameScene extends Phaser.Scene {
       this.handleQuit();
     });
     
+    // 버튼들 등장 애니메이션 - utils 함수 사용
     createScaleInAni(this, [this.resumeButton, this.quitButton], 0.3, { delay: 200 });
   }
   
@@ -326,9 +366,11 @@ export default class GameScene extends Phaser.Scene {
   }
 
   createObstacle() {
-    if (this.isGameOver || this.isPaused || this.obstacleNum >= this.maxObstacles && this.obstacleTime) {
+    if (this.isGameOver || this.isPaused || this.obstacleNum >= this.maxObstacles) {
+      if (this.obstacleNum >= this.maxObstacles && this.obstacleTime) {
         this.obstacleTime.destroy();
         this.obstacleTime = null;
+      }
       return;
     }
 
@@ -366,10 +408,12 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // ------------------------------------------------------------------------------------ 충돌 처리 메서드들
+  // 공통 플레이어 피격 처리 함수
   handlePlayerHit(player, otherObject) {
-    if (this.isGameOver || this.isInvincible) return;
+  if (this.isGameOver || this.isInvincible) return;
 
-    if (player.shieldOverlay) { // 쉴드가 있는 경우
+    // 쉴드가 있으면 쉴드 제거하고 충돌한 객체만 파괴
+    if (player.shieldOverlay) {
       player.shieldOverlay.destroy();
       player.shieldOverlay = null;
       if (otherObject && otherObject.destroy) {
@@ -380,6 +424,7 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
 
+    // 쉴드가 없으면 게임오버
     if (otherObject) otherObject.destroy();
     player.setTexture('playerHit');
   
@@ -501,7 +546,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     const shieldOverlay = this.add.graphics();
-    shieldOverlay.fillStyle(colorConfig.hex_ice, 0.3);
+    shieldOverlay.fillStyle(0x66ccff, 0.3);
     shieldOverlay.fillCircle(0, 0, player.width * 0.2);
     shieldOverlay.setDepth(1);
     shieldOverlay.x = player.x;
@@ -650,7 +695,7 @@ export default class GameScene extends Phaser.Scene {
         const newX = obstacle.x + Math.sin(Date.now() / frequency + obstacle.y / offset) * amplitude;
         const obstacleHalfWidth = obstacle.width * obstacle.scaleX * 0.5;
         const minX = 150 + obstacleHalfWidth;
-        const maxX = this.screenWidth - 150 - obstacleHalfWidth;
+        const maxX = this.scale.width - 150 - obstacleHalfWidth;
         if (newX >= minX && newX <= maxX) obstacle.setX(newX);
       }
     });
@@ -682,13 +727,13 @@ export default class GameScene extends Phaser.Scene {
     this.sound.stopAll();
     this.soundManager.setBGM('bossBgm');
 
-    const warningHeight = this.screenHeight * 0.3;
+    const warningHeight = this.scale.height * 0.3;
     const warningOverlay = this.add.graphics({ x: 0, y: 0 }).setDepth(100);
     
     for (let i = 0; i < warningHeight; i += 4) {
       const alpha = 0.7 * (1 - i / warningHeight);
       warningOverlay.fillStyle(colorConfig.hex_lollipop, alpha);
-      warningOverlay.fillRect(0, i, this.screenWidth, 4);
+      warningOverlay.fillRect(0, i, this.scale.width, 4);
     }
 
     createWarningAni(this, warningOverlay);
@@ -799,8 +844,14 @@ export default class GameScene extends Phaser.Scene {
   }
 
   removeDoubleTimerUI() {
-    this.doubleTimerBg = destroyElement(this.doubleTimerBg);
-    this.doubleCountdownText = destroyElement(this.doubleCountdownText);
+    if (this.doubleTimerBg) {
+      this.doubleTimerBg.destroy();
+      this.doubleTimerBg = null;
+    }
+    if (this.doubleCountdownText) {
+      this.doubleCountdownText.destroy();
+      this.doubleCountdownText = null;
+    }
   }
 
   updateBossHealthUI() {
@@ -853,9 +904,18 @@ export default class GameScene extends Phaser.Scene {
   }
 
   removeBossHealthUI() {
-    this.bossHealthBg = destroyElement(this.bossHealthBg);
-    this.bossBarBg = destroyElement(this.bossBarBg);
-    this.bossBar = destroyElement(this.bossBar);
+    if (this.bossHealthBg) {
+      this.bossHealthBg.destroy();
+      this.bossHealthBg = null;
+    }
+    if (this.bossBarBg) {
+      this.bossBarBg.destroy();
+      this.bossBarBg = null;
+    }
+    if (this.bossBar) {
+      this.bossBar.destroy();
+      this.bossBar = null;
+    }
   }
 
   createBossBullet() {
@@ -867,8 +927,13 @@ export default class GameScene extends Phaser.Scene {
   }
 
   defeatBoss(boss) { 
-    this.bossBulletTime = destroyElement(this.bossBulletTime);
+    if (this.bossBulletTime) {
+      this.bossBulletTime.destroy();
+      this.bossBulletTime = null;
+    }
+    
     this.removeBossHealthUI(); 
+    
     this.time.delayedCall(500, () => {
       this.tweens.add({
         targets: boss,
@@ -923,7 +988,7 @@ export default class GameScene extends Phaser.Scene {
 }
 
   showBoss() { 
-    this.boss = this.physics.add.sprite(this.screenWidth / 2, -100, 'boss1');
+    this.boss = this.physics.add.sprite(this.scale.width / 2, -100, 'boss1');
     this.boss.type = 'boss1';
     this.boss.body.setSize(this.boss.width * 0.8, this.boss.height * 0.8);
     this.boss.setScale(0.4);
@@ -939,8 +1004,8 @@ export default class GameScene extends Phaser.Scene {
     this.tweens.add({
       targets: this.boss,
       x: {
-        getStart: () => this.screenWidth / 2 - bossSwingAmplitude,
-        getEnd: () => this.screenWidth / 2 + bossSwingAmplitude
+        getStart: () => this.scale.width / 2 - bossSwingAmplitude,
+        getEnd: () => this.scale.width / 2 + bossSwingAmplitude
       },
       duration: bossSwingDuration,
       yoyo: true,
@@ -1019,9 +1084,12 @@ export default class GameScene extends Phaser.Scene {
       });
     } else {
       this.soundManager.playSound('gameOverSound');
-      this.repairSprite = destroyElement(this.repairSprite);
+      if (this.repairSprite) {
+        this.repairSprite.destroy();
+        this.repairSprite = null;
+      }
       infoText.setText(`워키토키가 부족해\n수리가 불가능해요!`);
-      const sadSprite = this.add.sprite(this.screenWidth / 2, this.screenHeight / 2 - 140, 'playerSad').setDepth(52).setScale(1);
+      const sadSprite = this.add.sprite(this.scale.width / 2, this.scale.height / 2 - 140, 'playerSad').setDepth(52).setScale(1);
       sadSprite.play('playerSadAni');
       reviveButton.setTint(colorConfig.hex_gray);
     }
@@ -1037,15 +1105,19 @@ export default class GameScene extends Phaser.Scene {
   }
 
   showQuizPopup() {
-    this.repairSprite = destroyElement(this.repairSprite);
+    if (this.repairSprite) {
+      this.repairSprite.destroy();
+      this.repairSprite = null;
+    }
+    const { width, height } = this.scale;
     const randomQuiz = this.quizData[Phaser.Math.Between(0, this.quizData.length - 1)]; // 랜덤 퀴즈 선택
-    const quizContainer = this.add.image(this.screenWidth / 2, this.screenHeight / 2, 'quizContainer').setScale(0.7).setDepth(60).setAlpha(0);
+    const quizContainer = this.add.image(width / 2, height / 2, 'quizContainer').setScale(0.7).setDepth(60).setAlpha(0);
     
     createOverlay(this, 55);
     createScaleInAni(this, quizContainer, 0.8, { scaleY: 0.8 }); // 팝업 등장 애니메이션
 
     // 퀴즈 질문
-    const questionText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 - 70, randomQuiz.question, {
+    const questionText = this.add.text(width / 2, height / 2 - 70, randomQuiz.question, {
       fontSize: '28px',
       fill: colorConfig.color_lollipop,
       fontFamily: FONT_FAMILY,
@@ -1057,11 +1129,11 @@ export default class GameScene extends Phaser.Scene {
     
     const quizItemButtons = []; // 선택지 버튼들 생성
     const buttonSpacing = 160; // 버튼 간격
-    const startX = this.screenWidth / 2 - ((randomQuiz.examples.length - 1) * buttonSpacing) / 2;
+    const startX = width / 2 - ((randomQuiz.examples.length - 1) * buttonSpacing) / 2;
     
     randomQuiz.examples.forEach((example, index) => {
       const buttonX = startX + (index * buttonSpacing);
-      const buttonY = this.screenHeight / 2 + 60;
+      const buttonY = height / 2 + 60;
       const buttonBg = this.add.image(buttonX, buttonY, 'quizItemBox').setOrigin(0.5).setDepth(61).setInteractive().setAlpha(0).setScale(0.5); // 배경 이미지
       
       let displayText = example;
@@ -1136,9 +1208,9 @@ export default class GameScene extends Phaser.Scene {
 
   correctAnswer() {
     this.soundManager.playSound('correctSound');
-    const danceSprite = this.add.sprite(this.screenWidth / 2, this.screenHeight / 2, 'playerDance').setDepth(70).setScale(1.2);
+    const danceSprite = this.add.sprite(this.scale.width / 2, this.scale.height / 2, 'playerDance').setDepth(70).setScale(1.2);
     danceSprite.play('playerDanceAni');
-    const successText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 - 200, '정답입니다!', {
+    const successText = this.add.text(this.scale.width / 2, this.scale.height / 2 - 200, '정답입니다!', {
       fontSize: '40px',
       fill: colorConfig.color_lollipop,
       fontFamily: FONT_FAMILY,
@@ -1249,10 +1321,14 @@ export default class GameScene extends Phaser.Scene {
     this.showLevelUpNotification();
     this.gamePause();
 
-    this.time.delayedCall(2000, () => { // 2초 후 게임 재개
+    // 2초 후 게임 재개
+    this.time.delayedCall(2000, () => {
       this.gameResume();
       this.soundManager.setBGM('bgm');
-      if (!this.obstacleTime) this.createObstacleTimer();
+      // 장애물 타이머 재시작
+      if (!this.obstacleTime) {
+        this.createObstacleTimer();
+      }
     });    
   }
 
@@ -1292,8 +1368,11 @@ export default class GameScene extends Phaser.Scene {
 
   showGameComplete() {
     this.soundManager.setBGM('finalSound');
+    const { width, height } = this.scale;
+
     const finishBg = this.add.image(this.screenWidth / 2, this.screenHeight / 2, 'finishBackground').setDepth(80).setAlpha(0);
-    const finalScoreText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 + 60, `최종 점수: ${this.score}`, {
+
+    const finalScoreText = this.add.text(width / 2, height / 2 + 60, `최종 점수: ${this.score}`, {
       fontSize: '36px',
       fill: colorConfig.color_chocolate,
       fontFamily: FONT_FAMILY,
@@ -1301,7 +1380,7 @@ export default class GameScene extends Phaser.Scene {
       padding: { x: 20, y: 10 }
     }).setOrigin(0.5).setDepth(81).setAlpha(0);
 
-    const menuButton = this.add.image(this.screenWidth / 2, this.screenHeight - 80, 'goHomeButton').setOrigin(0.5).setDepth(81).setInteractive().setAlpha(0).setScale(0.3);
+    const menuButton = this.add.image(width / 2, height - 80, 'goHomeButton').setOrigin(0.5).setDepth(81).setInteractive().setAlpha(0).setScale(0.3);
     addHoverEffect(menuButton, this);
 
     createFadeInAni(this, [finishBg, finalScoreText, menuButton], { duration: 500, delay: 200 });
@@ -1312,40 +1391,146 @@ export default class GameScene extends Phaser.Scene {
   handleQuit() { // 게임 끝내기
     this.soundManager.playSound('buttonSound');
 
+    // 모든 타이머 정리
+    // if (this.obstacleTime) {
+    //   this.obstacleTime.destroy();
+    //   this.obstacleTime = null;
+    // }
     this.obstacleTime = destroyElement(this.obstacleTime);
     this.bulletTime = destroyElement(this.bulletTime);
-    this.doubleTime = destroyElement(this.doubleTime);
-    this.bossBulletTime = destroyElement(this.bossBulletTime);
-    this.boss = destroyElement(this.boss);
-    this.levelBg = destroyElement(this.levelBg);
-    this.levelBar = destroyElement(this.levelBar);
-    this.levelText = destroyElement(this.levelText);
-    this.playButton = destroyElement(this.playButton);
-    this.pauseButton = destroyElement(this.pauseButton);
-    this.repairSprite = destroyElement(this.repairSprite);
-    this.player.shieldOverlay = destroyElement(this.player.shieldOverlay);
 
-    this.obstacles = clearGroup(this.obstacles);
-    this.coins = clearGroup(this.coins);
-    this.shields = clearGroup(this.shields);
-    this.doubles = clearGroup(this.doubles);
-    this.walkies = clearGroup(this.walkies);
-    this.playerBullets = clearGroup(this.playerBullets);
-    this.bossBullets = clearGroup(this.bossBullets);
 
+    if (this.doubleTime) {
+      this.doubleTime.destroy();
+      this.doubleTime = null;
+    }
+    if (this.bossBulletTime) {
+      this.bossBulletTime.destroy();
+      this.bossBulletTime = null;
+    }
+
+    // 모든 게임 오브젝트 그룹 정리
+    if (this.obstacles) {
+      this.obstacles.clear(true, true);
+      this.obstacles = null;
+    }
+    if (this.coins) {
+      this.coins.clear(true, true);
+      this.coins = null;
+    }
+    if (this.shields) {
+      this.shields.clear(true, true);
+      this.shields = null;
+    }
+    if (this.doubles) {
+      this.doubles.clear(true, true);
+      this.doubles = null;
+    }
+    if (this.walkies) {
+      this.walkies.clear(true, true);
+      this.walkies = null;
+    }
+    if (this.playerBullets) {
+      this.playerBullets.clear(true, true);
+      this.playerBullets = null;
+    }
+    if (this.bossBullets) {
+      this.bossBullets.clear(true, true);
+      this.bossBullets = null;
+    }
+
+    // 보스 정리
+    if (this.boss) {
+      this.boss.destroy();
+      this.boss = null;
+    }
+
+    // 플레이어 쉴드 오버레이 정리
+    if (this.player && this.player.shieldOverlay) {
+      this.player.shieldOverlay.destroy();
+      this.player.shieldOverlay = null;
+    }
+
+    // UI 요소들 정리
     this.removeDoubleTimerUI();
     this.removeBossHealthUI();
-    this.hidePauseMenu();
     removeOverlay(this);
+    this.hidePauseMenu();
 
+    // 레벨 진행 바 정리
+    if (this.levelBg) {
+      this.levelBg.destroy();
+      this.levelBg = null;
+    }
+    if (this.levelBar) {
+      this.levelBar.destroy();
+      this.levelBar = null;
+    }
+    if (this.levelText) {
+      this.levelText.destroy();
+      this.levelText = null;
+    }
+
+    // 버튼들 정리
+    if (this.playButton) {
+      this.playButton.destroy();
+      this.playButton = null;
+    }
+    if (this.pauseButton) {
+      this.pauseButton.destroy();
+      this.pauseButton = null;
+    }
+
+    // 수리 스프라이트 정리
+    if (this.repairSprite) {
+      this.repairSprite.destroy();
+      this.repairSprite = null;
+    }
+
+    // 모든 트윈 정지
     this.tweens.killAll();
+    
+    // 모든 사운드 정지
     this.sound.stopAll();
+    
+    // 물리 엔진 정지
     this.physics.pause();
     
+    // 씬 전환
     this.scene.stop('GameScene'); 
     this.scene.start('MenuScene');
     this.game.canvas.style.cursor = 'default';
     
-    this.initVariables();
+    // 모든 변수 초기화
+    this.isPaused = false;
+    this.isGameOver = false;
+    this.isBossShown = false;
+    this.isRevivePopupShown = false;
+    this.isInvincible = false;
+    this.isDragging = false;
+    this.obstacleNum = 0;
+    this.obstacleType = 0;
+    this.distance = 0;
+    this.score = 0;
+    this.level = 1;
+    this.playerShake = 0;
+    this.dragOffsetX = 0;
+    this.backgroundSpeed = 426;
+    this.obstacleSpeed = 426;
+    this.maxObstacles = 30;
+    
+    // 텍스트 객체들 초기화
+    this.scoreUI = null;
+    this.distanceUI = null;
+    this.walkieUI = null;
+    this.repairUI = null;
+    
+    // 기타 객체들 초기화
+    this.player = null;
+    this.background = null;
+    this.cursors = null;
+    this.overlay = null;
+    this.quizData = null;
+    this.soundManager = null;
   }
 }
