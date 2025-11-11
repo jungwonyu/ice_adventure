@@ -113,3 +113,75 @@ export const levelConfig = {
  * 게임 전체에서 사용되는 기본 폰트
  */
 export const FONT_FAMILY = 'Cafe24Surround';
+
+// ------------------------------------------------------------------------------------
+// ASSET LOADING CONFIGURATION
+// ------------------------------------------------------------------------------------
+
+/**
+ * 로드할 이미지 리소스 목록
+ */
+export const IMAGE_ASSETS = [
+  // 배경 및 UI
+  'startBackground', 'background', 'gameTitle', 'finishBackground',
+  'revivePopup', 'reviveButton', 'endGameButton', 'replayButton',
+  'quizContainer', 'quizItemBox', 'nextContainer',
+  
+  // 버튼
+  'playButton', 'pauseButton', 'soundButton', 'muteButton',
+  'startButton', 'startButtonHover', 'howToPlayButton', 'howToPlayButtonHover',
+  'goHomeButton', 'leftArrow', 'rightArrow', 'closeButton',
+  
+  // 가이드
+  'guide1', 'guide2', 'guide3', 'guide4', 'guide5',
+  
+  // 플레이어
+  'player', 'playerHit', 'playerBullet',
+  
+  // 아이템
+  'walkie', 'repair',
+  
+  // 장애물
+  'obstacle2', 'obstacle2Ice', 'obstacle3',
+  
+  // 보스
+  'boss1', 'boss2', 'boss3', 'boss4', 'boss5', 'bossBullet'
+];
+
+/**
+ * 스프라이트시트 리소스 목록
+ */
+export const SPRITESHEET_ASSETS = [
+  { key: 'playerDance', frameWidth: 160, frameHeight: 260 },
+  { key: 'playerSad', frameWidth: 160, frameHeight: 260 },
+  { key: 'playerRepair', frameWidth: 240, frameHeight: 260 },
+  { key: 'double', frameWidth: 260, frameHeight: 260 },
+  { key: 'shield', frameWidth: 260, frameHeight: 260 },
+  { key: 'coin', frameWidth: 260, frameHeight: 260 },
+  { key: 'distance', frameWidth: 256, frameHeight: 130 },
+  { key: 'obstacle1', frameWidth: 400, frameHeight: 400 }
+];
+
+/**
+ * 사운드 리소스 목록
+ */
+export const SOUND_ASSETS = [
+  'bgm', 'bossBgm', 'coinBgm', 'nextBgm',
+  'buttonSound', 'coinSound', 'helperSound', 'bulletHitSound',
+  'explosionSound', 'bossShootSound', 'correctSound', 'incorrectSound',
+  'countdownSound', 'nextLevelSound', 'finalSound', 'gameOverSound', 'hitPlayerSound'
+];
+
+/**
+ * 애니메이션 설정 목록
+ */
+export const ANIMATION_CONFIGS = [
+  { key: 'obstacle1Ani', spriteKey: 'obstacle1', frames: { start: 0, end: 2 }, frameRate: 3 },
+  { key: 'coinAni', spriteKey: 'coin', frames: { start: 0, end: 3 }, frameRate: 10 },
+  { key: 'shieldAni', spriteKey: 'shield', frames: { start: 0, end: 3 }, frameRate: 10 },
+  { key: 'doubleAni', spriteKey: 'double', frames: { start: 0, end: 3 }, frameRate: 10 },
+  { key: 'distanceAni', spriteKey: 'distance', frames: { start: 3, end: 0 }, frameRate: 3 },
+  { key: 'playerDanceAni', spriteKey: 'playerDance', frames: { start: 0, end: 4 }, frameRate: 5 },
+  { key: 'playerSadAni', spriteKey: 'playerSad', frames: { start: 0, end: 4 }, frameRate: 5 },
+  { key: 'playerRepairAni', spriteKey: 'playerRepair', frames: { start: 0, end: 4 }, frameRate: 5 }
+];

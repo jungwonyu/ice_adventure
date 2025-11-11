@@ -63,32 +63,33 @@ export function createTextStyle(options = {}) {
 // ------------------------------------------------------------------------------------
 // ANIMATION UTILITIES
 // ------------------------------------------------------------------------------------
-export function createFadeInAni(scene, targets, options = {}) {
-  const defaultOptions = { alpha: 1, duration: 300, ease: 'Power2.out', delay: 0 };
-  const aniOptions = { ...defaultOptions, ...options, targets };
-  return scene.tweens.add(aniOptions);
-}
 
-export function createScaleInAni(scene, targets, scale = 1, options = {}) {
-  const defaultOptions = { alpha: 1, duration: 400, scaleX: scale, scaleY: scale, ease: 'Back.out', delay: 100 };
-  const aniOptions = { ...defaultOptions, ...options, targets };
-  return scene.tweens.add(aniOptions);
-}
-
-export function createTextEffectAni(scene, target, options = {}) {
-  const defaultOptions = { y: target.y - 50, alpha: 0, duration: 800, ease: 'Power2.out' };
-  const aniOptions = { ...defaultOptions, ...options, targets: target };
-  return scene.tweens.add({...aniOptions, onComplete: () => target.destroy()});
-}
-
-export function createWarningAni(scene, target, options = {}) {
-  const defaultOptions = { alpha: 0.2, duration: 300, yoyo: true, repeat: 7, ease: 'Power2.inOut'};
-  const animOption = { ...defaultOptions, ...options, targets: target };
-  return scene.tweens.add(animOption);
-}
-
-export function createCustomAni(scene, target, options = {}) {
-  const defaultOptions = { duration: 300, ease: 'Power2.out' };
-  const animOption = { ...defaultOptions, ...options, targets: target };
-  return scene.tweens.add(animOption);
+/**
+ * 범용 트윈 애니메이션 생성
+ * @param {Phaser.Scene} scene - 씬 객체
+ * @param {Object|Array} targets - 애니메이션 대상
+ * @param {Object} options - 트윈 옵션 (duration, ease, alpha, scale, y, yoyo, repeat, delay, onComplete 등)
+ * @returns {Phaser.Tweens.Tween} 생성된 트윈 객체
+ * 
+ * @example
+ * // 페이드인
+ * createAnimation(this, target, { alpha: 1, duration: 300 });
+ * 
+ * // 스케일 확대
+ * createAnimation(this, target, { scale: 1, duration: 400, ease: 'Back.out' });
+ * 
+ * // 텍스트 효과 (위로 이동하며 사라짐)
+ * createAnimation(this, target, { y: target.y - 50, alpha: 0, duration: 800, onComplete: () => target.destroy() });
+ */
+export function createAnimation(scene, targets, options = {}) {
+  const config = { targets, duration: 300, ease: 'Power2.out', ...options };
+  
+  // scale 단축 옵션 처리
+  if (options.scale !== undefined) {
+    config.scaleX = options.scale;
+    config.scaleY = options.scale;
+    delete config.scale;
+  }
+  
+  return scene.tweens.add(config);
 }

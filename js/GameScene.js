@@ -1,7 +1,7 @@
 import SoundManager from './SoundManager.js';
 import { colorConfig, levelConfig, FONT_FAMILY } from './config.js';
-import { addHoverEffect,  createScaleInAni,  createFadeInAni,  createOverlay,  removeOverlay, createTextEffectAni, createWarningAni, createCustomAni, destroyElement, clearGroup, createTextStyle } from './utils.js';
-import { OBSTACLE_CONFIGS, getObstacleConfig, getObstacleConfigByType } from './ObstacleConfig.js';
+import { addHoverEffect, createOverlay, removeOverlay, createAnimation, destroyElement, clearGroup, createTextStyle } from './utils.js';
+import { getObstacleConfig, getObstacleConfigByType } from './ObstacleConfig.js';
 import { executeRandomBossPattern } from './BossPatterns.js';
 
 export default class GameScene extends Phaser.Scene {
@@ -266,8 +266,8 @@ export default class GameScene extends Phaser.Scene {
   }
 
   showPauseMenu() {
-    this.pauseOverlay = createOverlay(this, 100);
-    createCustomAni(this, this.pauseOverlay, { type: 'fillAlpha', to: 1 });
+    this.pauseOverlay = createOverlay(this, 100, 0);
+    createAnimation(this, this.pauseOverlay, { fillAlpha: 0.7, duration: 300 });
 
     // 다시 시작 버튼
     this.resumeButton = this.add.image(this.screenWidth / 2 - 140, this.screenHeight / 2 + 20, 'replayButton').setScale(0).setAlpha(0).setDepth(101).setInteractive();
@@ -288,7 +288,7 @@ export default class GameScene extends Phaser.Scene {
       this.handleQuit();
     });
     
-    createScaleInAni(this, [this.resumeButton, this.quitButton], 0.3, { delay: 200 });
+    createAnimation(this, [this.resumeButton, this.quitButton], { scale: 0.3, alpha: 1, duration: 400, ease: 'Back.out', delay: 200 });
   }
   
   hidePauseMenu() {
@@ -331,7 +331,6 @@ export default class GameScene extends Phaser.Scene {
 
   setObstacle(obstacle, config) {
     obstacle.originalType = config.key;
-    obstacle.configKey = Object.keys(OBSTACLE_CONFIGS).find(key => OBSTACLE_CONFIGS[key].key === config.key);
     obstacle.setScale(config.scale);
     obstacle.setSize(obstacle.width * 0.9, obstacle.height * 0.9);
     obstacle.setVelocityY(this.obstacleSpeed);
@@ -450,7 +449,7 @@ export default class GameScene extends Phaser.Scene {
     
     const collectText = this.add.text(coin.x, coin.y - 30, '+10', createTextStyle());
     
-    createTextEffectAni(this, collectText);
+    createAnimation(this, collectText, { y: collectText.y - 50, alpha: 0, duration: 800, onComplete: () => collectText.destroy() });
   }
 
   collectShield(player, shield) { // 쉴드 수집
@@ -633,7 +632,7 @@ export default class GameScene extends Phaser.Scene {
       warningOverlay.fillRect(0, i, this.screenWidth, 4);
     }
 
-    createWarningAni(this, warningOverlay);
+    createAnimation(this, warningOverlay, { alpha: 0.2, duration: 300, yoyo: true, repeat: 7, ease: 'Power2.inOut' });
     this.time.delayedCall(1000, () => {
       warningOverlay.destroy();
       this.showBoss();
@@ -899,7 +898,7 @@ export default class GameScene extends Phaser.Scene {
     createOverlay(this, 45);
     const popupBg = this.add.image(this.screenWidth / 2, this.screenHeight / 2, 'revivePopup').setScale(0).setDepth(50).setAlpha(0);
     
-    createScaleInAni(this, popupBg, 1.6, { scaleY: 1.6 });
+    createAnimation(this, popupBg, { scale: 1.6, alpha: 1, duration: 400, ease: 'Back.out', delay: 100 });
     
     // 1. 텍스트
     const infoContainer = this.add.container(this.screenWidth / 2 + 20, this.screenHeight / 2 - 260).setDepth(51).setAlpha(0);
@@ -913,13 +912,13 @@ export default class GameScene extends Phaser.Scene {
       createTextStyle({ fontSize: '26px', fill: colorConfig.color_deepBlue, stroke: 'transparent', strokeThickness: 0, align: 'center', wordWrap: { width: 500 } })
     ).setOrigin(0.5).setDepth(51).setAlpha(0);
 
-    createFadeInAni(this, [infoContainer, infoText], { delay: 300 });
+    createAnimation(this, [infoContainer, infoText], { alpha: 1, duration: 300, delay: 300 });
 
     // 수리하기 버튼과 끝내기 버튼
     const reviveButton = this.add.image(this.screenWidth / 2 - 70, this.screenHeight / 2 + 110, 'reviveButton').setOrigin(0.5).setDepth(51).setInteractive().setAlpha(0).setScale(0);
     const endGameButton = this.add.image(this.screenWidth / 2 + 70, this.screenHeight / 2 + 110, 'endGameButton').setOrigin(0.5).setDepth(51).setInteractive().setAlpha(0).setScale(0);
 
-    createScaleInAni(this, [reviveButton, endGameButton], 0.2, { delay: 500 });
+    createAnimation(this, [reviveButton, endGameButton], { scale: 0.2, alpha: 1, duration: 400, ease: 'Back.out', delay: 500 });
     
     if (canRevive) {
       this.soundManager.playSound('incorrectSound');
@@ -967,14 +966,14 @@ export default class GameScene extends Phaser.Scene {
     const quizContainer = this.add.image(this.screenWidth / 2, this.screenHeight / 2, 'quizContainer').setScale(0.7).setDepth(60).setAlpha(0);
     
     createOverlay(this, 55);
-    createScaleInAni(this, quizContainer, 0.8, { scaleY: 0.8 }); // 팝업 등장 애니메이션
+    createAnimation(this, quizContainer, { scale: 0.8, alpha: 1, duration: 400, ease: 'Back.out', delay: 100 }); // 팝업 등장 애니메이션
 
     // 퀴즈 질문
     const questionText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 - 70, randomQuiz.question, 
       createTextStyle({ fontSize: '28px', fill: colorConfig.color_lollipop, align: 'center', wordWrap: { width: 500 } })
     ).setOrigin(0.5).setDepth(61).setAlpha(0);
     
-    createFadeInAni(this, questionText, { delay: 300 }); // 텍스트들 페이드인 애니메이션
+    createAnimation(this, questionText, { alpha: 1, duration: 300, delay: 300 }); // 텍스트들 페이드인 애니메이션
     
     const quizItemButtons = []; // 선택지 버튼들 생성
     const buttonSpacing = 160; // 버튼 간격
@@ -1179,7 +1178,7 @@ export default class GameScene extends Phaser.Scene {
       createTextStyle({ fontSize: '45px', fill: colorConfig.color_lollipop, align: 'center' })
     ).setOrigin(0.5).setDepth(21).setAlpha(0);
 
-    createScaleInAni(this, [nextContainer, levelText], 1, { duration: 500 });
+    createAnimation(this, [nextContainer, levelText], { scale: 1, alpha: 1, duration: 500, ease: 'Back.out', delay: 100 });
     createOverlay(this, 19);
 
     this.time.delayedCall(2000, () => {
@@ -1209,7 +1208,7 @@ export default class GameScene extends Phaser.Scene {
     const menuButton = this.add.image(this.screenWidth / 2, this.screenHeight - 80, 'goHomeButton').setOrigin(0.5).setDepth(81).setInteractive().setAlpha(0).setScale(0.3);
     addHoverEffect(menuButton, this);
 
-    createFadeInAni(this, [finishBg, finalScoreText, menuButton], { duration: 500, delay: 200 });
+    createAnimation(this, [finishBg, finalScoreText, menuButton], { alpha: 1, duration: 500, delay: 200 });
 
     menuButton.on('pointerdown', () => this.handleQuit()); // 버튼 클릭 시 메인 메뉴로 이동
   }

@@ -9,10 +9,8 @@
 
 /**
  * 장애물별 상세 설정
- * 
- * 속성 설명:
  */
-export const OBSTACLE_CONFIGS = {
+const OBSTACLE_CONFIGS = {
   /**
    * 뱀 장애물
    * 좌우로 물결치며 움직이고, 파괴 시 더블샷 또는 쉴드 드롭
@@ -112,9 +110,8 @@ export const OBSTACLE_CONFIGS = {
 
 /**
  * 장애물 타입 인덱스와 이름 매핑
- * GameScene에서 순환 생성 시 사용
  */
-export const OBSTACLE_TYPE_MAP = {
+const OBSTACLE_TYPE_MAP = {
   0: 'snake',
   1: 'cactus', 
   2: 'rock'
@@ -126,7 +123,7 @@ export const OBSTACLE_TYPE_MAP = {
 
 /**
  * 장애물 스프라이트 키로 설정 가져오기
- * @param {string} obstacleKey - 장애물 스프라이트 키 (예: 'obstacle1')
+ * @param {string} obstacleKey
  * @returns {Object} 장애물 설정 객체
  */
 export function getObstacleConfig(obstacleKey) {

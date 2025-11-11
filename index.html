@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ice Adventure</title>
   <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
-  <link rel="preload" href="https://fastly.jsdelivr.net/gh/projectnoonnu/2506-1@1.0/PFStardustS.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/style.css">
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
 </head>
@@ -21,8 +20,7 @@
         urls: ['css/style.css']
       },
       active: function() {
-        // 빌드된 파일이 있으면 사용, 없으면 원본 사용
-        import('./dist/js/game.js').catch(() => import('./js/Main.js'));
+        import('./dist/js/game.js').catch(() => import('./js/Main.js')); // 빌드된 파일이 있으면 사용, 없으면 원본 사용
       }
     });
   </script>

@@ -26,7 +26,7 @@ const createBossBullet = (bossBullets, x, y) => {
 /**
  * 각도를 기반으로 총알의 속도 설정
  * @param {Phaser.GameObjects.Sprite} bullet - 총알 객체
- * @param {number} angle - 각도 (라디안)
+ * @param {number} angle - 각도
  * @param {number} speed - 속도
  */
 const setBulletVelocityFromAngle = (bullet, angle, speed) => {
