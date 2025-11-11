@@ -2,7 +2,6 @@ import { levelConfig } from './Main.js';
 
 const BOSS_BULLET_PATTERNS = {
   straight: {
-    name: "직선 패턴",
     execute: (scene, boss, bossBullets, level) => {
       for (let i = 0; i < levelConfig[level].bossBullet; i++) {
         const bullet = bossBullets.get(boss.x + (i - 1) * 30, boss.y + 50);
@@ -16,7 +15,6 @@ const BOSS_BULLET_PATTERNS = {
   },
 
   fan: {
-    name: "부채꼴 패턴",
     execute: (scene, boss, bossBullets, level) => {
       const angleStep = 30;
       const bulletCount = levelConfig[level].bossBullet;
@@ -33,7 +31,6 @@ const BOSS_BULLET_PATTERNS = {
   },
 
   tracking: {
-    name: "플레이어 추적 패턴",
     execute: (scene, boss, bossBullets, level) => {
       const playerDirection = Phaser.Math.Angle.Between(boss.x, boss.y, scene.player.x, scene.player.y);
       for (let i = 0; i < levelConfig[level].bossBullet; i++) {
@@ -49,7 +46,6 @@ const BOSS_BULLET_PATTERNS = {
   },
 
   circle: {
-    name: "원형 패턴",
     execute: (scene, boss, bossBullets, level) => {
       const bulletCount = 6;
       for (let i = 0; i < bulletCount; i++) {
@@ -64,7 +60,6 @@ const BOSS_BULLET_PATTERNS = {
   },
 
   spiral: {
-    name: "나선형 패턴",
     execute: (scene, boss, bossBullets, level) => {
       const spiralBullets = 4;
       const spiralOffset = Date.now() * 0.005;
@@ -80,7 +75,6 @@ const BOSS_BULLET_PATTERNS = {
   },
 
   vShape: {
-    name: "V자 패턴",
     execute: (scene, boss, bossBullets, level) => {
       const vBullets = 4;
       for (let i = 0; i < vBullets; i++) {
@@ -97,14 +91,6 @@ const BOSS_BULLET_PATTERNS = {
   }
 };
 
-const PATTERN_SEQUENCES = {
-  1: ['straight', 'fan', 'circle'],
-  2: ['straight', 'fan', 'tracking', 'circle'],
-  3: ['straight', 'fan', 'tracking', 'circle', 'spiral'],
-  4: ['straight', 'fan', 'tracking', 'circle', 'spiral', 'vShape'],
-  default: ['straight', 'fan', 'tracking', 'circle', 'spiral', 'vShape']
-};
-
 // 패턴 실행 헬퍼 함수
 export function executeBossPattern(scene, patternName) {
   const pattern = BOSS_BULLET_PATTERNS[patternName];
@@ -112,6 +98,6 @@ export function executeBossPattern(scene, patternName) {
 }
 
 export function getRandomPatternForLevel(level) {
-  const availablePatterns = PATTERN_SEQUENCES[level] || PATTERN_SEQUENCES.default;
+  const availablePatterns = ['straight', 'fan', 'tracking', 'circle', 'spiral', 'vShape'];
   return availablePatterns[Phaser.Math.Between(0, availablePatterns.length - 1)];
 }

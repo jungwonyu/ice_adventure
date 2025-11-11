@@ -1,6 +1,6 @@
 import SoundManager from './SoundManager.js';
 import { colorConfig, levelConfig, FONT_FAMILY } from './Main.js';
-import {  addHoverEffect,  createScaleInAni,  createFadeInAni,  createOverlay,  removeOverlay, createTextEffectAni, createWarningAni, createCustomAni, destroyElement, clearGroup, createTextStyle } from './utils.js';
+import { addHoverEffect,  createScaleInAni,  createFadeInAni,  createOverlay,  removeOverlay, createTextEffectAni, createWarningAni, createCustomAni, destroyElement, clearGroup, createTextStyle } from './utils.js';
 import { OBSTACLE_CONFIGS, getObstacleConfig, getObstacleConfigByType } from './ObstacleConfig.js';
 import { executeBossPattern, getRandomPatternForLevel } from './BossPatterns.js';
 
@@ -97,7 +97,7 @@ export default class GameScene extends Phaser.Scene {
   }
 
   initQuiz(data) {
-    this.quizData = data?.quizData || []; // 퀴즈 데이터 초기화
+    this.quizData = data?.quizData || [];
     this.isGameOver = false;
   }
 
@@ -248,16 +248,16 @@ export default class GameScene extends Phaser.Scene {
 
   gamePause() {
     this.isPaused = true;
-    this.physics.pause(); // 물리 엔진 일시정지
-    this.sound.pauseAll(); // 음악 정지
+    this.physics.pause(); 
+    this.sound.pauseAll(); 
     this.toggleAnimations(true);
     this.toggleTimers(true);
   }
 
   gameResume() {
     this.isPaused = false;
-    this.physics.resume(); // 물리 엔진 재개
-    this.sound.resumeAll(); // 음악 재생
+    this.physics.resume();
+    this.sound.resumeAll();
     this.toggleAnimations(false);
     this.toggleTimers(false);
     this.hidePauseMenu(); // 일시정지 UI 제거
@@ -316,18 +316,18 @@ export default class GameScene extends Phaser.Scene {
         let x = startX + (i * spacing);
         x = Math.max(config.margin, Math.min(x, 720 - config.margin));
         const obstacle = this.obstacles.create(x, -100, config.key);
-        this.setupObstacle(obstacle, config);
+        this.setObstacle(obstacle, config);
       }
       this.obstacleNum++;
     } else { // 다른 장애물들은 1개씩 생성
       const x = Phaser.Math.Between(config.margin, 720 - config.margin);
       const obstacle = this.obstacles.create(x, -100, config.key);
-      this.setupObstacle(obstacle, config);
+      this.setObstacle(obstacle, config);
       this.obstacleNum++;
     }
   }
 
-  setupObstacle(obstacle, config) {
+  setObstacle(obstacle, config) {
     obstacle.originalType = config.key;
     obstacle.configKey = Object.keys(OBSTACLE_CONFIGS).find(key => OBSTACLE_CONFIGS[key].key === config.key);
     obstacle.setScale(config.scale);
@@ -389,7 +389,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.time.delayedCall(500, () => hitText.destroy());
 
-    // 설정 기반 장애물 처리
+    // 장애물 처리
     const config = getObstacleConfig(obstacle.originalType);
     if (!config) return;
 
@@ -447,11 +447,8 @@ export default class GameScene extends Phaser.Scene {
     if (player.shieldOverlay) {
       player.shieldOverlay.destroy();
       player.shieldOverlay = null;
-      // 쉴드가 벗겨진 직후 일정 시간 무적
-      this.isInvincible = true;
-      this.time.delayedCall(1000, () => {
-        this.isInvincible = false;
-      });
+      this.isInvincible = true; // 쉴드가 벗겨진 직후 일정 시간 무적
+      this.time.delayedCall(1000, () => this.isInvincible = false);
     }
 
     const shieldOverlay = this.add.graphics();
@@ -463,7 +460,7 @@ export default class GameScene extends Phaser.Scene {
     player.shieldOverlay = shieldOverlay;
   }
 
-  collectDouble(player, double) { // 더블 총알
+  collectDouble(player, double) { // 더블 총알 수집
     this.soundManager.playSound('helperSound');
     double.destroy();
     
@@ -477,19 +474,16 @@ export default class GameScene extends Phaser.Scene {
       delay: 500,
       callback: () => {
       if (this.isGameOver || this.isInvincible) return;
-        // ...existing code...
         this.createPlayerBullet(this.player.x - 25, this.player.y - 50);
         this.createPlayerBullet(this.player.x + 25, this.player.y - 50);
-        // ...existing code...
       },
       loop: true
     });
 
-    this.doubleTime = this.time.delayedCall(20000, () => { // 새로운 20초 타이머 시작
+    this.doubleTime = this.time.delayedCall(20000, () => { // 20초 타이머 종료
       if (this.bulletTime) this.bulletTime.destroy();
       
-      this.removeDoubleTimerUI(); // 더블 UI 제거
-      
+      this.removeDoubleTimerUI();
       this.bulletTime = this.time.addEvent({ // 원래 단일 총알 타이머 복구
         delay: 500,
         callback: () => {
@@ -498,15 +492,12 @@ export default class GameScene extends Phaser.Scene {
         },
         loop: true
       });
-      
       this.doubleTime = null; // 타이머 초기화
     });
   }
 
   collectWalkie(player, walkie) { // 워키토키 수집
     walkie.destroy();
-    
-    // 워키토키 개수 증가
     const currentCount = parseInt(this.walkieUI.text);
     this.walkieUI.setText(currentCount + 1);
   }
@@ -519,7 +510,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.updateBackground(delta);
     
-    if (this.isDragging) {
+    if (this.isDragging) { // 모바일용
       this.handleDragMode(delta);
       return;
     }
@@ -564,6 +555,7 @@ export default class GameScene extends Phaser.Scene {
         this.doubleTimerBarBg.x = playerX;
         this.doubleTimerBarBg.y = playerY;
       }
+
       this.doubleTimerBar.x = playerX;
       this.doubleTimerBar.y = playerY;
       this.updateDoubleTimerUI();
@@ -605,8 +597,7 @@ export default class GameScene extends Phaser.Scene {
       return;
     }
 
-    // 보스 위치 조정
-    if (this.boss && this.boss.active) {
+    if (this.boss && this.boss.active) { // 보스 위치 조정
       const bossTargetY = 250;
       if (this.boss.y >= bossTargetY - 5) {
         this.boss.y = bossTargetY;
@@ -926,8 +917,7 @@ export default class GameScene extends Phaser.Scene {
       reviveButton.on('pointerdown', () => {
         this.soundManager.playSound('buttonSound');
         this.walkieUI.setText(playerWalkies - requiredWalkies); // 워키토키 차감
-        // repair 횟수 증가
-        const currentRepairCount = parseInt(this.repairUI.text);
+        const currentRepairCount = parseInt(this.repairUI.text); // repair 횟수 증가
         this.repairUI.setText(currentRepairCount + 1);
         // 팝업 제거
         removeOverlay(this);
@@ -1000,7 +990,6 @@ export default class GameScene extends Phaser.Scene {
       
       quizItemButtons.push({ bg: buttonBg, text: buttonText }); // 버튼 그룹으로 관리
 
-      // 호버 효과
       buttonBg.on('pointerover', () => {
         buttonBg.setTint(colorConfig.hex_gray);
         this.game.canvas.style.cursor = 'pointer';
@@ -1071,8 +1060,7 @@ export default class GameScene extends Phaser.Scene {
       removeOverlay(this);
       this.gameResume();
       
-      // 장애물 타이머가 없으면 다시 시작
-      if (!this.obstacleTime && !this.isBossShown) {
+      if (!this.obstacleTime && !this.isBossShown) { // 장애물 타이머가 없으면 다시 시작
         this.createObstacleTimer();
       }
     });
@@ -1098,7 +1086,6 @@ export default class GameScene extends Phaser.Scene {
     
     this.updateLevelProgressBar();
 
-    // 게임 상태 초기화 (거리, 점수, 워키토키, 수리 횟수는 유지)
     this.isBossShown = false;
     this.obstacleNum = 0;
     this.obstacleType = 0;
@@ -1106,7 +1093,6 @@ export default class GameScene extends Phaser.Scene {
     this.isGameOver = false;
     this.playerShake = 0;
     
-    // 모든 게임 객체 제거
     this.obstacles.clear(true, true);
     this.coins.clear(true, true);
     this.shields.clear(true, true);
@@ -1117,25 +1103,21 @@ export default class GameScene extends Phaser.Scene {
     
     // 플레이어 상태 초기화
     this.player.setTexture('player');
-    this.tweens.add({
-      targets: this.player,
-      x: 360,
-      y: 1120,
-      duration: 1000,
-      ease: 'Power2'
-    });
+    this.tweens.add({ targets: this.player, x: 360, y: 1120, duration: 1000, ease: 'Power2' });
     this.player.setVelocity(0, 0);
+    
+    if (this.bulletTime) this.bulletTime.destroy();
+
     if (this.player.shieldOverlay) {
       this.player.shieldOverlay.destroy();
       this.player.shieldOverlay = null;
     }
     
-    // 타이머들 정리 및 재설정
     if (this.doubleTime) {
       this.doubleTime.destroy();
       this.doubleTime = null;
     }
-    if (this.bulletTime) this.bulletTime.destroy();
+
     if (this.bossBulletTime) {
       this.bossBulletTime.destroy();
       this.bossBulletTime = null;
@@ -1155,8 +1137,8 @@ export default class GameScene extends Phaser.Scene {
       loop: true
     });
 
-    // 레벨업 알림 표시
-    this.showLevelUpNotification();
+    // 레벨업 표시
+    this.showLevelUpPopup();
     this.gamePause();
 
     this.time.delayedCall(2000, () => { // 2초 후 게임 재개
@@ -1166,7 +1148,7 @@ export default class GameScene extends Phaser.Scene {
     });    
   }
 
-  showLevelUpNotification() {
+  showLevelUpPopup() {
     this.soundManager.playSound('explosionSound');
     const nextContainer = this.add.image(this.screenWidth / 2, this.screenHeight / 2, 'nextContainer').setScale(0).setDepth(20).setAlpha(0);
     const levelText = this.add.text(this.screenWidth / 2, this.screenHeight / 2 + 50, `Level ${this.level}`, 
@@ -1174,10 +1156,8 @@ export default class GameScene extends Phaser.Scene {
     ).setOrigin(0.5).setDepth(21).setAlpha(0);
 
     createScaleInAni(this, [nextContainer, levelText], 1, { duration: 500 });
-
     createOverlay(this, 19);
 
-    // 2초 후 팝업 제거 애니메이션
     this.time.delayedCall(2000, () => {
       this.tweens.add({
         targets: [nextContainer, levelText],
@@ -1223,9 +1203,7 @@ export default class GameScene extends Phaser.Scene {
 
   toggleTimers(isPaused) { // 타이머 통합 처리
     const timers = [this.bulletTime, this.obstacleTime, this.doubleTime, this.bossBulletTime];
-    timers.forEach(timer => {
-      if (timer) timer.paused = isPaused;
-    });
+    timers.forEach(timer => (timer) && (timer.paused = isPaused));
   }
 
   createPlayerBullet(x = this.player.x, y = this.player.y - 50) { // 총알 생성 공통 함수

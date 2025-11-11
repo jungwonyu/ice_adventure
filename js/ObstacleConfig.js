@@ -1,5 +1,4 @@
-// 장애물 설정 통합 관리
-export const OBSTACLE_CONFIGS = {
+export const OBSTACLE_CONFIGS = { // 장애물 설정 통합 관리
   snake: {
     key: 'obstacle1',
     scale: 0.3,
@@ -77,21 +76,18 @@ export const OBSTACLE_CONFIGS = {
   }
 };
 
-// 장애물 타입별 매핑
-export const OBSTACLE_TYPE_MAP = {
+export const OBSTACLE_TYPE_MAP = { // 장애물 타입별 매핑
   0: 'snake',
   1: 'cactus', 
   2: 'rock'
 };
 
-// 장애물 키로 설정 가져오기
-export function getObstacleConfig(obstacleKey) {
+export function getObstacleConfig(obstacleKey) { // 장애물 키로 설정 가져오기
   const configKey = Object.keys(OBSTACLE_CONFIGS).find(key => OBSTACLE_CONFIGS[key].key === obstacleKey);
   return OBSTACLE_CONFIGS[configKey];
 }
 
-// 장애물 타입 인덱스로 설정 가져오기
-export function getObstacleConfigByType(typeIndex) {
+export function getObstacleConfigByType(typeIndex) { // 장애물 타입 인덱스로 설정 가져오기
   const typeName = OBSTACLE_TYPE_MAP[typeIndex];
   return OBSTACLE_CONFIGS[typeName];
 }
