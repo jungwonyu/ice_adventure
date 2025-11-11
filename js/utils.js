@@ -1,4 +1,4 @@
-import { colorConfig, FONT_FAMILY } from './Main.js';
+import { colorConfig, FONT_FAMILY } from './config.js';
 
 export function addHoverEffect(button, scene) {
   button.on('pointerover', () => {

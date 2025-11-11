@@ -1,8 +1,8 @@
 import SoundManager from './SoundManager.js';
-import { colorConfig, levelConfig, FONT_FAMILY } from './Main.js';
+import { colorConfig, levelConfig, FONT_FAMILY } from './config.js';
 import { addHoverEffect,  createScaleInAni,  createFadeInAni,  createOverlay,  removeOverlay, createTextEffectAni, createWarningAni, createCustomAni, destroyElement, clearGroup, createTextStyle } from './utils.js';
 import { OBSTACLE_CONFIGS, getObstacleConfig, getObstacleConfigByType } from './ObstacleConfig.js';
-import { executeBossPattern, getRandomPatternForLevel } from './BossPatterns.js';
+import { executeRandomBossPattern } from './BossPatterns.js';
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -167,7 +167,7 @@ export default class GameScene extends Phaser.Scene {
   createGameUI() { // 게임 UI 생성
     const uiConfigs = [
       { name: 'score', x: 100, y: 50, iconKey: 'coin', iconScale: 0.2, initialValue: '0', textColor: colorConfig.color_black, animation: 'coinAni', textProperty: 'scoreUI'},
-      { name: 'distance', x: 100, y: 120, iconKey: 'distance', iconScale: 0.2, initialValue: '0m', textColor: colorConfig.color_black, animation: 'distanceAni', textProperty: 'distanceUI' },
+      { name: 'distance', x: 100, y: 120, iconKey: 'distance', iconScale: 0.2, initialValue: '0m', textColor: colorConfig.color_black, animation: 'distanceAni', textProperty: 'distanceUI', textOffsetX: 10 },
       { name: 'walkie', x: 100, y: this.screenHeight - 40, iconKey: 'walkie', iconScale: 0.2, initialValue: '3', textColor: colorConfig.color_black, textProperty: 'walkieUI' },
       { name: 'repair', x: 260, y: this.screenHeight - 40, iconKey: 'repair', iconScale: 0.15, initialValue: '0', textColor: colorConfig.color_black, textProperty: 'repairUI' }
     ];
@@ -188,7 +188,9 @@ export default class GameScene extends Phaser.Scene {
     
     icon.setScale(config.iconScale);
     if (hasAnimation) icon.play(config.animation);
-    const text = this.add.text(20, 0, config.initialValue, { fontSize: '24px', fill: config.textColor, fontFamily: FONT_FAMILY }).setOrigin(0.5);
+    
+    const textX = config.textOffsetX ? 20 + config.textOffsetX : 20; // textOffsetX가 있으면 적용
+    const text = this.add.text(textX, 0, config.initialValue, { fontSize: '24px', fill: config.textColor, fontFamily: FONT_FAMILY }).setOrigin(0.5);
     container.add([bg, icon, text]);
 
     return { container, icon, text };
@@ -358,6 +360,17 @@ export default class GameScene extends Phaser.Scene {
       this.obstacleTime.remove();
       this.obstacleTime = null; 
     }
+    
+    // 더블 타이머 일시정지 (경과 시간 저장)
+    if (this.doubleTime && this.doubleStartTime) {
+      this.doubleTime.paused = true;
+      this.doublePausedTime = this.time.now; // 일시정지된 시각 저장
+    }
+
+    if (this.bulletTime) {
+      this.bulletTime.paused = true;
+    }
+    
     this.gamePause();
     this.showRevivePopup();
   }
@@ -786,8 +799,7 @@ export default class GameScene extends Phaser.Scene {
   createBossBullet() {
     if (!this.boss || !this.boss.active || this.isGameOver || this.isPaused) return;
 
-    const patternName = getRandomPatternForLevel(this.level);
-    executeBossPattern(this, patternName);
+    executeRandomBossPattern(this);
     this.soundManager.playSound('bossShootSound');
   }
 
@@ -1058,6 +1070,18 @@ export default class GameScene extends Phaser.Scene {
       this.player.setTexture('player');
       if (this.isBossShown) this.player.y += 400;
       removeOverlay(this);
+      
+      // 더블 타이머 재개 (일시정지된 시간만큼 시작 시간 조정)
+      if (this.doubleTime && this.doubleTime.paused && this.doublePausedTime) {
+        const pausedDuration = this.time.now - this.doublePausedTime; // 일시정지된 시간
+        this.doubleStartTime += pausedDuration; // 시작 시간을 일시정지 시간만큼 늦춤
+        this.doubleTime.paused = false;
+        this.doublePausedTime = null;
+      }
+      if (this.bulletTime && this.bulletTime.paused) {
+        this.bulletTime.paused = false;
+      }
+      
       this.gameResume();
       
       if (!this.obstacleTime && !this.isBossShown) { // 장애물 타이머가 없으면 다시 시작

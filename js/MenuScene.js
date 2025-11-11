@@ -1,7 +1,11 @@
 import SoundManager from './SoundManager.js';
-import { colorConfig } from './Main.js';
+import { colorConfig } from './config.js';
 import { addHoverEffect } from './utils.js';
+import { getImagePath, getSoundPath, getDataPath } from './config.js';
 
+/**
+ * MenuScene - 게임 시작 화면 및 리소스 로딩을 담당하는 Scene
+ */
 export default class MenuScene extends Phaser.Scene {
   constructor() {
     super('MenuScene');
@@ -10,11 +14,11 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   preload() {
-    this.createLoadingBar(); // 로딩 바 생성
-    this.loadImages(); // 이미지 로드
-    this.loadAnimations(); // 애니메이션 설정
-    this.loadSounds(); // 사운드 로드
-    this.load.json('quizData', 'data/quizData.json'); // 퀴즈 데이터
+    this.createLoadingBar();
+    this.loadImages();
+    this.loadAnimations();
+    this.loadSounds();
+    this.load.json('quizData', getDataPath('quizData.json'));
   }
 
   create() {
@@ -22,60 +26,69 @@ export default class MenuScene extends Phaser.Scene {
     this.setSoundManager();
   }
 
+  // ------------------------------------------------------------------------------------
   // ASSET LOADING
+  // ------------------------------------------------------------------------------------
+  
+  /**
+   * 게임에 필요한 모든 이미지 리소스 로드
+   */
   loadImages() {
-    this.load.image('startBackground', 'assets/images/startBackground.png');
-    this.load.image('background', 'assets/images/background.png');
-    this.load.image('gameTitle', 'assets/images/gameTitle.png');
-    this.load.image('finishBackground', 'assets/images/finishBackground.png');
-    this.load.image('player', 'assets/images/player.png');
-    this.load.image('playerHit', 'assets/images/playerHit.png');
-    this.load.image('playerBullet', 'assets/images/playerBullet.png');
-    this.load.spritesheet('playerDance', 'assets/images/playerDance.png', { frameWidth: 160, frameHeight: 260 });
-    this.load.spritesheet('playerSad', 'assets/images/playerSad.png', { frameWidth: 160, frameHeight: 260 });
-    this.load.spritesheet('playerRepair', 'assets/images/playerRepair.png', { frameWidth: 240, frameHeight: 260 });
-    this.load.spritesheet('double', 'assets/images/double.png', { frameWidth: 260, frameHeight: 260 });
-    this.load.spritesheet('shield', 'assets/images/shield.png', { frameWidth: 260, frameHeight: 260 });
-    this.load.spritesheet('coin', 'assets/images/coin.png', { frameWidth: 260, frameHeight: 260 });
-    this.load.image('walkie', 'assets/images/walkie.png');
-    this.load.image('repair', 'assets/images/repair.png');
-    this.load.spritesheet('distance', 'assets/images/distance.png', { frameWidth: 256, frameHeight: 130 });
-    this.load.image('revivePopup', 'assets/images/revivePopup.png');
-    this.load.image('reviveButton', 'assets/images/reviveButton.png');
-    this.load.image('endGameButton', 'assets/images/endGameButton.png');
-    this.load.image('replayButton', 'assets/images/replayButton.png');
-    this.load.image('quizContainer', 'assets/images/quizContainer.png');
-    this.load.image('quizItemBox', 'assets/images/quizItemBox.png');
-    this.load.image('nextContainer', 'assets/images/nextContainer.png');
-    this.load.image('obstacle2', 'assets/images/obstacle2.png');
-    this.load.image('obstacle2Ice', 'assets/images/obstacle2Ice.png');
-    this.load.image('obstacle3', 'assets/images/obstacle3.png');
-    this.load.spritesheet('obstacle1', 'assets/images/obstacle1.png', { frameWidth: 400, frameHeight: 400 });
-    this.load.image('boss1', 'assets/images/boss1.png');
-    this.load.image('boss2', 'assets/images/boss2.png');
-    this.load.image('boss3', 'assets/images/boss3.png');
-    this.load.image('boss4', 'assets/images/boss4.png');
-    this.load.image('boss5', 'assets/images/boss5.png');
-    this.load.image('bossBullet', 'assets/images/bossBullet.png');
-    this.load.image('playButton', 'assets/images/playButton.png');
-    this.load.image('pauseButton', 'assets/images/pauseButton.png');
-    this.load.image('soundButton', 'assets/images/soundButton.png');
-    this.load.image('muteButton', 'assets/images/muteButton.png');
-    this.load.image('startButton', 'assets/images/startButton.png');
-    this.load.image('startButtonHover', 'assets/images/startButtonHover.png');
-    this.load.image('howToPlayButton', 'assets/images/howToPlayButton.png');
-    this.load.image('howToPlayButtonHover', 'assets/images/howToPlayButtonHover.png');
-    this.load.image('goHomeButton', 'assets/images/goHomeButton.png');
-    this.load.image('guide1', 'assets/images/guide1.png');
-    this.load.image('guide2', 'assets/images/guide2.png');
-    this.load.image('guide3', 'assets/images/guide3.png');
-    this.load.image('guide4', 'assets/images/guide4.png');
-    this.load.image('guide5', 'assets/images/guide5.png');
-    this.load.image('leftArrow', 'assets/images/leftArrow.png');
-    this.load.image('rightArrow', 'assets/images/rightArrow.png');
-    this.load.image('closeButton', 'assets/images/closeButton.png');
+    this.load.image('startBackground', getImagePath('startBackground.png'));
+    this.load.image('background', getImagePath('background.png'));
+    this.load.image('gameTitle', getImagePath('gameTitle.png'));
+    this.load.image('finishBackground', getImagePath('finishBackground.png'));
+    this.load.image('player', getImagePath('player.png'));
+    this.load.image('playerHit', getImagePath('playerHit.png'));
+    this.load.image('playerBullet', getImagePath('playerBullet.png'));
+    this.load.spritesheet('playerDance', getImagePath('playerDance.png'), { frameWidth: 160, frameHeight: 260 });
+    this.load.spritesheet('playerSad', getImagePath('playerSad.png'), { frameWidth: 160, frameHeight: 260 });
+    this.load.spritesheet('playerRepair', getImagePath('playerRepair.png'), { frameWidth: 240, frameHeight: 260 });
+    this.load.spritesheet('double', getImagePath('double.png'), { frameWidth: 260, frameHeight: 260 });
+    this.load.spritesheet('shield', getImagePath('shield.png'), { frameWidth: 260, frameHeight: 260 });
+    this.load.spritesheet('coin', getImagePath('coin.png'), { frameWidth: 260, frameHeight: 260 });
+    this.load.image('walkie', getImagePath('walkie.png'));
+    this.load.image('repair', getImagePath('repair.png'));
+    this.load.spritesheet('distance', getImagePath('distance.png'), { frameWidth: 256, frameHeight: 130 });
+    this.load.image('revivePopup', getImagePath('revivePopup.png'));
+    this.load.image('reviveButton', getImagePath('reviveButton.png'));
+    this.load.image('endGameButton', getImagePath('endGameButton.png'));
+    this.load.image('replayButton', getImagePath('replayButton.png'));
+    this.load.image('quizContainer', getImagePath('quizContainer.png'));
+    this.load.image('quizItemBox', getImagePath('quizItemBox.png'));
+    this.load.image('nextContainer', getImagePath('nextContainer.png'));
+    this.load.image('obstacle2', getImagePath('obstacle2.png'));
+    this.load.image('obstacle2Ice', getImagePath('obstacle2Ice.png'));
+    this.load.image('obstacle3', getImagePath('obstacle3.png'));
+    this.load.spritesheet('obstacle1', getImagePath('obstacle1.png'), { frameWidth: 400, frameHeight: 400 });
+    this.load.image('boss1', getImagePath('boss1.png'));
+    this.load.image('boss2', getImagePath('boss2.png'));
+    this.load.image('boss3', getImagePath('boss3.png'));
+    this.load.image('boss4', getImagePath('boss4.png'));
+    this.load.image('boss5', getImagePath('boss5.png'));
+    this.load.image('bossBullet', getImagePath('bossBullet.png'));
+    this.load.image('playButton', getImagePath('playButton.png'));
+    this.load.image('pauseButton', getImagePath('pauseButton.png'));
+    this.load.image('soundButton', getImagePath('soundButton.png'));
+    this.load.image('muteButton', getImagePath('muteButton.png'));
+    this.load.image('startButton', getImagePath('startButton.png'));
+    this.load.image('startButtonHover', getImagePath('startButtonHover.png'));
+    this.load.image('howToPlayButton', getImagePath('howToPlayButton.png'));
+    this.load.image('howToPlayButtonHover', getImagePath('howToPlayButtonHover.png'));
+    this.load.image('goHomeButton', getImagePath('goHomeButton.png'));
+    this.load.image('guide1', getImagePath('guide1.png'));
+    this.load.image('guide2', getImagePath('guide2.png'));
+    this.load.image('guide3', getImagePath('guide3.png'));
+    this.load.image('guide4', getImagePath('guide4.png'));
+    this.load.image('guide5', getImagePath('guide5.png'));
+    this.load.image('leftArrow', getImagePath('leftArrow.png'));
+    this.load.image('rightArrow', getImagePath('rightArrow.png'));
+    this.load.image('closeButton', getImagePath('closeButton.png'));
   }
 
+  /**
+   * 스프라이트 애니메이션 설정
+   */
   loadAnimations() {
     this.load.on('complete', () => {
       const animations = [
@@ -97,27 +110,36 @@ export default class MenuScene extends Phaser.Scene {
     });
   }
 
+  /**
+   * 게임에 사용되는 모든 사운드 파일 로드
+   */
   loadSounds() {
-    this.load.audio('bgm', 'assets/sounds/bgm.mp3');
-    this.load.audio('bossBgm', 'assets/sounds/bossBgm.mp3');
-    this.load.audio('coinBgm', 'assets/sounds/coinBgm.mp3');
-    this.load.audio('nextBgm', 'assets/sounds/nextBgm.mp3');
-    this.load.audio('buttonSound', 'assets/sounds/buttonSound.mp3');
-    this.load.audio('coinSound', 'assets/sounds/coinSound.mp3');
-    this.load.audio('helperSound', 'assets/sounds/helperSound.mp3');
-    this.load.audio('bulletHitSound', 'assets/sounds/bulletHitSound.mp3');
-    this.load.audio('explosionSound', 'assets/sounds/explosionSound.mp3');
-    this.load.audio('bossShootSound', 'assets/sounds/bossShootSound.mp3');
-    this.load.audio('correctSound', 'assets/sounds/correctSound.mp3');
-    this.load.audio('incorrectSound', 'assets/sounds/incorrectSound.mp3');
-    this.load.audio('countdownSound', 'assets/sounds/countdownSound.mp3');
-    this.load.audio('nextLevelSound', 'assets/sounds/nextLevelSound.mp3');
-    this.load.audio('finalSound', 'assets/sounds/finalSound.mp3');
-    this.load.audio('gameOverSound', 'assets/sounds/gameOverSound.mp3');
-    this.load.audio('hitPlayerSound', 'assets/sounds/hitPlayerSound.mp3');
+    this.load.audio('bgm', getSoundPath('bgm.mp3'));
+    this.load.audio('bossBgm', getSoundPath('bossBgm.mp3'));
+    this.load.audio('coinBgm', getSoundPath('coinBgm.mp3'));
+    this.load.audio('nextBgm', getSoundPath('nextBgm.mp3'));
+    this.load.audio('buttonSound', getSoundPath('buttonSound.mp3'));
+    this.load.audio('coinSound', getSoundPath('coinSound.mp3'));
+    this.load.audio('helperSound', getSoundPath('helperSound.mp3'));
+    this.load.audio('bulletHitSound', getSoundPath('bulletHitSound.mp3'));
+    this.load.audio('explosionSound', getSoundPath('explosionSound.mp3'));
+    this.load.audio('bossShootSound', getSoundPath('bossShootSound.mp3'));
+    this.load.audio('correctSound', getSoundPath('correctSound.mp3'));
+    this.load.audio('incorrectSound', getSoundPath('incorrectSound.mp3'));
+    this.load.audio('countdownSound', getSoundPath('countdownSound.mp3'));
+    this.load.audio('nextLevelSound', getSoundPath('nextLevelSound.mp3'));
+    this.load.audio('finalSound', getSoundPath('finalSound.mp3'));
+    this.load.audio('gameOverSound', getSoundPath('gameOverSound.mp3'));
+    this.load.audio('hitPlayerSound', getSoundPath('hitPlayerSound.mp3'));
   }
 
+  // ------------------------------------------------------------------------------------
   // SCENE SETUP
+  // ------------------------------------------------------------------------------------
+  
+  /**
+   * 시작 화면 구성 (인트로 비디오, 타이틀, 버튼 등)
+   */
   setStartScene() {
     const { width, height } = this.scale;
 
@@ -130,7 +152,14 @@ export default class MenuScene extends Phaser.Scene {
     const title = this.add.image(width / 2, height / 2 - 400, 'gameTitle').setOrigin(0.5).setScale(0);
     this.tweens.add({ targets: title, scaleX: 0.7, scaleY: 0.7, duration: 1000, ease: 'Back.out' });
 
-    // 시작 버튼
+    this.createStartButton(width, height);
+    this.createHowToPlayButton(width, height);
+  }
+
+  /**
+   * 게임 시작 버튼 생성
+   */
+  createStartButton(width, height) {
     const startButton = this.add.image(width / 2 - 150, height / 2 - 100, 'startButton').setOrigin(0.5).setScale(0.3).setInteractive();
     addHoverEffect(startButton, this);
     startButton.on('pointerdown', () => {
@@ -139,32 +168,44 @@ export default class MenuScene extends Phaser.Scene {
       this.scene.start('GameScene', { quizData: quizData });
       this.soundManager.playSound('buttonSound');
     });
+  }
 
-    // 게임 방법 버튼
+  /**
+   * 게임 방법 버튼 생성
+   */
+  createHowToPlayButton(width, height) {
     const howToPlayButton = this.add.image(width / 2 + 150, height / 2 - 100, 'howToPlayButton').setOrigin(0.5).setScale(0.3).setInteractive();
     addHoverEffect(howToPlayButton, this);
     howToPlayButton.on('pointerdown', () => this.showHowToPlayPopup());
   }
 
+  /**
+   * SoundManager 인스턴스 초기화
+   */
   setSoundManager() {
     this.soundManager = SoundManager.getInstance(this);
   }
 
-  // UTILITY FUNCTIONS
+  // ------------------------------------------------------------------------------------
+  // LOADING BAR
+  // ------------------------------------------------------------------------------------
+  
+  /**
+   * 리소스 로딩 진행 상황을 표시하는 로딩바 생성
+   */
   createLoadingBar() {
     const { width, height } = this.scale;
     this.cameras.main.setBackgroundColor(colorConfig.hex_loadingBg);
 
-    // 로딩바 구성 요소들
     const loadingBarConfig = { x: width / 2 - 250, y: height / 2 - 15, width: 500, height: 30, radius: 15 };
 
-    // 파란색 테두리 (외부)
+    // 로딩바 외곽선 (파란색)
     const blueOutline = this.add.graphics();
     blueOutline.lineStyle(3, colorConfig.hex_loadingBar, 1);
     blueOutline.strokeRoundedRect(loadingBarConfig.x - 3,  loadingBarConfig.y - 3,  loadingBarConfig.width + 6,  loadingBarConfig.height + 6,  loadingBarConfig.radius + 3);
     blueOutline.setDepth(10);
 
-    // 흰색 테두리 (내부)
+    // 로딩바 내부 테두리 (흰색)
     const whiteOutline = this.add.graphics();
     whiteOutline.lineStyle(2, colorConfig.hex_snow, 1);
     whiteOutline.strokeRoundedRect(loadingBarConfig.x - 1, loadingBarConfig.y - 1, loadingBarConfig.width + 2, loadingBarConfig.height + 2, loadingBarConfig.radius + 1);
@@ -176,23 +217,23 @@ export default class MenuScene extends Phaser.Scene {
     loadingBarBg.fillRoundedRect(loadingBarConfig.x, loadingBarConfig.y, loadingBarConfig.width, loadingBarConfig.height, loadingBarConfig.radius);
     loadingBarBg.setDepth(12);
 
-    // 로딩바 진행바
+    // 로딩바 진행 표시
     const loadingBar = this.add.graphics();
     loadingBar.setDepth(13);
 
-    // 로딩 이미지 애니메이션
+    // 로딩 애니메이션 스프라이트
     if (!this.anims.exists('loadingAni')) this.anims.create({ key: 'loadingAni', frames: this.anims.generateFrameNumbers('loading', { start: 0, end: 1 }), frameRate: 8, repeat: -1 });
     const loadingImage = this.add.sprite(loadingBarConfig.x, loadingBarConfig.y - 60, 'loading');
     loadingImage.setDepth(14);
     loadingImage.setScale(1.5);
     loadingImage.play('loadingAni');
 
-    // 로딩 진행 상황 처리
+    // 로딩 진행률에 따라 바 업데이트
     this.load.on('progress', (value) => {
       loadingBar.clear();
-      loadingBar.fillStyle(colorConfig.hex_loadingBar, 1); // bar 색상
+      loadingBar.fillStyle(colorConfig.hex_loadingBar, 1);
       const barWidth = loadingBarConfig.width * value;
-      const imageMargin = 50; // 좌우 여백
+      const imageMargin = 50;
       const moveRange = loadingBarConfig.width - (imageMargin * 2);
       const imageX = loadingBarConfig.x + imageMargin + (moveRange * value);
 
@@ -200,26 +241,35 @@ export default class MenuScene extends Phaser.Scene {
       loadingImage.setX(imageX);
     });
 
-    // 로딩 완료 시 정리
+    // 로딩 완료 시 UI 요소 제거
     this.load.on('complete', () => [blueOutline, whiteOutline, loadingBarBg, loadingBar, loadingImage].forEach(element => element.destroy()));
   }
 
+  // ------------------------------------------------------------------------------------
   // POPUP SYSTEM
+  // ------------------------------------------------------------------------------------
+  
+  /**
+   * 게임 방법 팝업 표시
+   */
   showHowToPlayPopup() {
     this.soundManager.playSound('buttonSound');
     const { width, height } = this.scale;
     let currentGuideIndex = 1;
     const popupElements = this.createPopupElements(width, height, currentGuideIndex);
-    this.setupPopupEvents(popupElements, currentGuideIndex); // 이벤트 핸들러 설정
-    this.animatePopupEntrance(popupElements); // 애니메이션 적용
+    this.setupPopupEvents(popupElements, currentGuideIndex);
+    this.animatePopupEntrance(popupElements);
   }
 
+  /**
+   * 팝업 UI 요소 생성 (오버레이, 가이드 이미지, 버튼 등)
+   */
   createPopupElements(width, height, currentGuideIndex) {
-    const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7).setDepth(100).setInteractive(); // 반투명 배경
-    const guideImage = this.add.image(width / 2, height / 2, 'guide1').setOrigin(0.5).setDepth(101).setScale(0.8); // 가이드 이미지
-    const leftArrow = this.add.image(width / 2 - 300, height / 2, 'leftArrow').setOrigin(0.5).setDepth(102).setScale(0.2).setInteractive(); // 왼쪽 화살표
-    const rightArrow = this.add.image(width / 2 + 300, height / 2, 'rightArrow').setOrigin(0.5).setDepth(102).setScale(0.2).setInteractive(); // 오른쪽 화살표
-    const pageIndicator = this.add.text(width / 2, height / 2 + 400, `${currentGuideIndex}/5`, { // 페이지 인디케이터
+    const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7).setDepth(100).setInteractive();
+    const guideImage = this.add.image(width / 2, height / 2, 'guide1').setOrigin(0.5).setDepth(101).setScale(0.8);
+    const leftArrow = this.add.image(width / 2 - 300, height / 2, 'leftArrow').setOrigin(0.5).setDepth(102).setScale(0.2).setInteractive();
+    const rightArrow = this.add.image(width / 2 + 300, height / 2, 'rightArrow').setOrigin(0.5).setDepth(102).setScale(0.2).setInteractive();
+    const pageIndicator = this.add.text(width / 2, height / 2 + 400, `${currentGuideIndex}/5`, {
       fontSize: '28px',
       fill: colorConfig.color_deepBlue,
       fontFamily: 'Cafe24Surround',
@@ -227,7 +277,7 @@ export default class MenuScene extends Phaser.Scene {
       strokeThickness: 3,
       backgroundColor: '#ffffff'
     }).setOrigin(0.5).setDepth(102);
-    const closeButton = this.add.image(width / 2, height - 150, 'closeButton').setOrigin(0.5).setDepth(102).setScale(0.3).setInteractive(); // 닫기 버튼
+    const closeButton = this.add.image(width / 2, height - 150, 'closeButton').setOrigin(0.5).setDepth(102).setScale(0.3).setInteractive();
 
     addHoverEffect(leftArrow, this);
     addHoverEffect(rightArrow, this);
@@ -236,44 +286,52 @@ export default class MenuScene extends Phaser.Scene {
     return { overlay, guideImage, leftArrow, rightArrow, pageIndicator, closeButton };
   }
 
+  /**
+   * 팝업 이벤트 핸들러 설정 (화살표 클릭, 닫기 등)
+   */
   setupPopupEvents(elements, currentGuideIndex) {
     const { overlay, guideImage, leftArrow, rightArrow, pageIndicator, closeButton } = elements;
-    const updateGuide = () => { // 가이드 업데이트 함수
+    
+    const updateGuide = () => {
       guideImage.setTexture(`guide${currentGuideIndex}`);
       pageIndicator.setText(`${currentGuideIndex}/5`);
     };
 
-    leftArrow.on('pointerdown', () => { // 왼쪽 화살표 클릭
+    // 이전 가이드로 이동
+    leftArrow.on('pointerdown', () => {
       this.soundManager.playSound('buttonSound');
       currentGuideIndex--;
       if (currentGuideIndex < 1) currentGuideIndex = 5;
       updateGuide();
     });
 
-    rightArrow.on('pointerdown', () => { // 오른쪽 화살표 클릭
+    // 다음 가이드로 이동
+    rightArrow.on('pointerdown', () => {
       this.soundManager.playSound('buttonSound');
       currentGuideIndex++;
       if (currentGuideIndex > 5) currentGuideIndex = 1;
       updateGuide();
     });
 
-    const closePopup = () => { // 팝업 닫기 함수
+    const closePopup = () => {
       this.soundManager.playSound('buttonSound');
       Object.values(elements).forEach(element => element.destroy());
       this.game.canvas.style.cursor = 'default';
     };
 
-    // 닫기 버튼 및 배경 클릭 이벤트
     closeButton.on('pointerdown', closePopup);
     overlay.on('pointerdown', closePopup);
   }
 
+  /**
+   * 팝업 등장 애니메이션
+   */
   animatePopupEntrance(elements) {
     const { guideImage, leftArrow, rightArrow, pageIndicator, closeButton } = elements;
     guideImage.setScale(0);
     [leftArrow, rightArrow, pageIndicator, closeButton].forEach(element => element.setAlpha(0));
 
-    this.tweens.add({ targets: guideImage, scaleX: 0.8, scaleY: 0.8, duration: 300, ease: 'Back.out' }); // 가이드 이미지 애니메이션
-    this.tweens.add({ targets: [leftArrow, rightArrow, pageIndicator, closeButton], alpha: 1, duration: 300, ease: 'Power2.out', delay: 150 }); // 기타 요소들 페이드인
+    this.tweens.add({ targets: guideImage, scaleX: 0.8, scaleY: 0.8, duration: 300, ease: 'Back.out' });
+    this.tweens.add({ targets: [leftArrow, rightArrow, pageIndicator, closeButton], alpha: 1, duration: 300, ease: 'Power2.out', delay: 150 });
   }
 }
