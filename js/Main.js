@@ -25,4 +25,3 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
-game.scene.start('Boot');
