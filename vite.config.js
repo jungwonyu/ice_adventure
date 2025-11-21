@@ -9,8 +9,8 @@ export default defineConfig({
       fileName: 'game',
       formats: ['es']
     },
-    outDir: 'dist/js',
-    emptyOutDir: true,
+    outDir: 'js',
+    emptyOutDir: false,
     rollupOptions: {
       external: ['phaser'],
       output: {

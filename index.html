@@ -20,7 +20,7 @@
         urls: ['css/style.css']
       },
       active: function() {
-        import('./dist/js/game.js').catch(() => import('./js/Main.js')); // 빌드된 파일이 있으면 사용, 없으면 원본 사용
+        import('./js/game.js').catch(() => import('./js/Main.js')); // 빌드된 파일이 있으면 사용, 없으면 원본 사용
       }
     });
   </script>
